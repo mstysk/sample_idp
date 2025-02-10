@@ -3,30 +3,6 @@
 import { encode as base64Encode } from "https://deno.land/std@0.200.0/encoding/base64.ts";
 import { KVStorage, StorageEntity, StorageInterface } from "../Infra/KV.ts";
 
-type Profile = {
-  username: string;
-  email: string;
-};
-
-export function isProfile(profile: unknown): profile is Profile {
-  if (profile === null || typeof profile !== "object") {
-    return false;
-  }
-  const target = profile as Record<string, unknown>;
-
-  return (
-    typeof target.username === "string" &&
-    target.username !== null &&
-    typeof target.email === "string" &&
-    target.email !== null &&
-    Object.keys(target).length === 2
-  );
-}
-
-type Authentication = {
-  token: string;
-};
-
 function generateSalt(): string {
   const randomBytes = new Uint8Array(16);
   crypto.getRandomValues(randomBytes);
@@ -51,16 +27,98 @@ export async function generateToken(
   return { token };
 }
 
+type ResourceId = string;
+type UserId = string;
+type Email = string;
+type Password = string;
+type Profile = {
+  displayName: string;
+  avatarUrl: string;
+};
+
+type SignupToken = string;
+type AccessToken = string;
+type RefreshToken = string;
+type UserActiveStatus = "pending" | "active" | "suspend" | "deleted";
+
+type AuthTokens = {
+  accessToken: AccessToken;
+  refreshToken: RefreshToken;
+};
+
+enum UserEventType {
+  PRE_REGISTERED = "pre_registered",
+  REGISTERED = "registered",
+  VERIFIRED = "verified",
+  PROFILE_UPDATED = "profile_updated",
+  PASSWORD_CHANGED = "password_changed",
+  LOGGEDIN = "loggedin",
+  LOGOUT = "logout",
+  SESSION_EXPIRED = "session_expired",
+}
+
 interface User extends StorageEntity {
+  id: UserId;
+  email: Email;
+  createdAt: Date;
+}
+
+interface UserSignupToken extends StorageEntity {
+  id: ResourceId;
+  email: Email;
+  token: SignupToken;
+  expiresAt: Date;
+  createdAt: Date;
+}
+
+interface UserActive extends StorageEntity {
+  id: ResourceId;
+  userId: UserId;
+  status: UserActiveStatus;
+  createdAt: Date;
+}
+
+interface UserCredential extends StorageEntity {
   id: string;
-  profile: Profile;
-  authentication: Authentication;
+  userId: UserId;
+  passwordHash: string;
+  createdAt: Date;
+}
+
+interface UserProfile extends StorageEntity {
+  id: ResourceId;
+  userId: UserId;
+  displayName: string;
+  avatarUrl: string;
+  createdAt: Date;
+}
+
+interface UserEvent extends StorageEntity {
+  id: ResourceId;
+  userId: UserId;
+  type: UserEventType;
+  eventData: Record<string, unknown>;
+  createdAt: Date;
 }
 
 interface UserRepositoryInterface {
-  store: (profile: Profile, authentication: Authentication) => Promise<void>;
-  update: (user: User) => Promise<void>;
-  findById: (id: string) => Promise<User | null>;
+  preregister(email: string): Promise<SignupToken>;
+  register(
+    token: SignupToken,
+    password: Password,
+    profile: Profile,
+  ): Promise<void>;
+  updateStatus(userId: UserId, status: UserActiveStatus): Promise<void>;
+  findById(userId: UserId): Promise<User | null>;
+}
+
+interface AuthenteicateRepositoryInterface {
+  signin(
+    email: string,
+    password: Password,
+  ): Promise<AuthTokens | null>;
+  logout(token: AccessToken): Promise<void>;
+  refresh(refreshToken: RefreshToken): Promise<AuthTokens | null>;
 }
 
 class UserRepository implements UserRepositoryInterface {
@@ -69,43 +127,9 @@ class UserRepository implements UserRepositoryInterface {
   constructor(storage: StorageInterface<User>) {
     this.storage = storage;
   }
-
-  async store(profile: Profile, authentication: Authentication) {
-    const id = this.generateUserId();
-
-    const user = {
-      id,
-      profile,
-      authentication,
-    } as User;
-
-    await this.storage.save(user);
-
-    return;
-  }
-
-  async update(user: User): Promise<void> {
-    const u = this.storage.findById(user.id);
-
-    if (typeof u === "undefined") {
-      throw new Error("User Not Found");
-    }
-
-    await this.storage.update(user.id, user);
-    return;
-  }
-
-  async findById(id: string): Promise<User | null> {
-    return await this.storage.findById(id);
-  }
-
-  private generateUserId(): string {
-    return crypto.randomUUID();
-  }
 }
 
 export async function createUserRepository(): Promise<UserRepositoryInterface> {
   const storage = await KVStorage.create<User>("users");
   return new UserRepository(storage);
 }
-
