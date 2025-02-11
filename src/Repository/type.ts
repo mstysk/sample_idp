@@ -27,3 +27,20 @@ export enum UserEventType {
   LOGOUT = "logout",
   SESSION_EXPIRED = "session_expired",
 }
+
+export type ToAddresss = string;
+
+export type MailContent = {
+  subject: string;
+  text: string;
+};
+
+export type MailOpts = {
+  host: string;
+  port: number;
+  auth: {
+    user: string;
+    pass: string;
+    type: string;
+  };
+};

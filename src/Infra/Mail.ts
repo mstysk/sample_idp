@@ -1,50 +1,33 @@
 import { MailSlurp } from "npm:mailslurp-client";
 import * as nodemailer from "nodemailer";
+import { MailContent, MailOpts, ToAddresss } from "../Repository/type.ts";
 
-type Message = {
-  to: string;
-  subject: string;
-  text: string;
-};
-
-type typedOpts = {
-  host: string;
-  port: number;
-  auth: {
-    user: string;
-    pass: string;
-    type: string;
-  };
-};
-
-export class MailService {
+class MailService {
   private mailer;
-  private static instance: MailService;
   private fromAddress: string;
 
-  constructor(opts: typedOpts, fromAddress: string) {
+  constructor(opts: MailOpts, fromAddress: string) {
     this.mailer = nodemailer.createTransport(opts);
     this.fromAddress = fromAddress;
   }
 
-  send(message: Message): Promise<void> {
-    const mess = { ...message, from: this.fromAddress };
-    console.log(mess);
+  send(to: ToAddresss, content: MailContent): Promise<void> {
+    const mess = { to, ...content, from: this.fromAddress };
     return this.mailer.sendMail(mess);
   }
+}
 
-  static async createFromMailSlurp(): Promise<MailService> {
-    if (this.instance) {
-      return this.instance;
-    }
+const getMailSlurp = async (): Promise<
+  { opts: MailOpts; fromAddress: string }
+> => {
+  const mailSlurp = new MailSlurp({
+    apiKey: Deno.env.get("MAILSLURP_API_KEY") || "",
+  });
 
-    const mailSlurp = new MailSlurp({
-      apiKey: Deno.env.get("MAILSLURP_API_KEY") || "",
-    });
+  const server = await mailSlurp.getImapSmtpAccessDetails();
 
-    const server = await mailSlurp.getImapSmtpAccessDetails();
-
-    const opts = {
+  return {
+    opts: {
       host: server.smtpServerHost,
       port: server.smtpServerPort,
       auth: {
@@ -52,8 +35,12 @@ export class MailService {
         pass: server.smtpPassword,
         type: "PLAIN",
       },
-    } as const;
+    },
+    fromAddress: server.emailAddress,
+  };
+};
 
-    return new MailService(opts, server.emailAddress);
-  }
+export async function createMailer(): Promise<MailService> {
+  const { opts, fromAddress } = await getMailSlurp();
+  return new MailService(opts, fromAddress);
 }
