@@ -7,6 +7,7 @@ export interface StorageInterface<T extends StorageEntity> {
   save(data: T): Promise<T>;
   update(id: string, data: Partial<T>): Promise<void>;
   findById(id: string): Promise<T | null>;
+  findByKey(key: string, value: string): Promise<T | null>;
 }
 
 export class KVStorage<T extends StorageEntity> implements StorageInterface<T> {
@@ -27,6 +28,7 @@ export class KVStorage<T extends StorageEntity> implements StorageInterface<T> {
     await this.kv.set(keySelector, data);
     return data;
   }
+
   async update(id: string, data: Partial<T>): Promise<void> {
     const keySelector = this.createKeySelector(id);
     await this.kv.set(keySelector, data);
@@ -36,6 +38,11 @@ export class KVStorage<T extends StorageEntity> implements StorageInterface<T> {
   async findById(id: string): Promise<T | null> {
     const keySelector = this.createKeySelector(id);
     const result = await this.kv.get<T>(keySelector);
+    return result.value;
+  }
+
+  async findByKey(key: string, value: string): Promise<T | null> {
+    const result = await this.kv.get<T>([this.prefix, key, value]);
     return result.value;
   }
 
