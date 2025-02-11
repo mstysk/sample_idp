@@ -32,5 +32,3 @@ jobs:
           project: "masatoyoshi-sample-idp-54"
           entrypoint: "main.ts"
           root: "."
-          
-          
