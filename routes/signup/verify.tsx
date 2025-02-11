@@ -14,7 +14,7 @@ export const handler: Handlers = {
     }
     const userRepsitory = await createUserRepository();
     const ret = await userRepsitory.verifyToken(token);
-    if (ret) {
+    if (!ret) {
       throw new Error("invalid token");
     }
     return ctx.render({ token });
