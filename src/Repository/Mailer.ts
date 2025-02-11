@@ -27,7 +27,7 @@ export async function generateContent<TData extends object>(
 ): Promise<MailContent> {
   return {
     subject: template.subject,
-    text: await generateMailContent(template.path, data),
+    html: await generateMailContent(template.path, data),
   };
 }
 

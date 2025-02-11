@@ -47,9 +47,8 @@ interface User extends StorageEntity {
 }
 
 interface UserSignupToken extends StorageEntity {
-  id: ResourceId;
+  id: SignupToken;
   email: Email;
-  token: SignupToken;
   expiredAt: Date;
   createdAt: Date;
 }
@@ -78,7 +77,7 @@ interface UserProfile extends StorageEntity {
 
 interface UserEvent extends StorageEntity {
   id: ResourceId;
-  resourceId: ResourceId | UserId;
+  resourceId: ResourceId | UserId | SignupToken;
   type: UserEventType;
   eventData: Record<string, unknown>;
   createdAt: Date;
@@ -89,10 +88,11 @@ interface UserRepositoryInterface {
   register(
     token: SignupToken,
     password: Password,
-    profile: Profile,
+    profile: Partial<Profile>,
   ): Promise<void>;
   updateStatus(userId: UserId, status: UserActiveStatus): Promise<void>;
   findById(userId: UserId): Promise<User | null>;
+  verifyToken(token: SignupToken): Promise<boolean>;
 }
 
 class UserRepository implements UserRepositoryInterface {
@@ -120,12 +120,10 @@ class UserRepository implements UserRepositoryInterface {
   }
   async preregister(email: Email): Promise<SignupToken> {
     const id = generateResourceId();
-    const token = generateResourceId();
     const now = new Date();
     await this.signupTokenStorage.save({
       id,
       email,
-      token,
       expiredAt: new Date(now.setHours(now.getHours() + 1)),
       createdAt: now,
     });
@@ -138,7 +136,7 @@ class UserRepository implements UserRepositoryInterface {
       },
       createdAt: now,
     });
-    return token;
+    return id;
   }
   async register(
     token: SignupToken,
@@ -146,7 +144,7 @@ class UserRepository implements UserRepositoryInterface {
     profile: Profile,
   ): Promise<void> {
     const id = generateResourceId();
-    const signUp = await this.signupTokenStorage.findByKey("token", token);
+    const signUp = await this.signupTokenStorage.findById(token);
     const passwordHash = await generatePassowrdHash(password);
     if (!signUp) {
       throw new Error("invalid token");
@@ -185,12 +183,23 @@ class UserRepository implements UserRepositoryInterface {
       },
       createdAt: new Date(),
     });
+    await this.signupTokenStorage.delete(token);
   }
   async updateStatus(userId: UserId, status: UserActiveStatus): Promise<void> {
     await this.activeStorage.update(userId, { status });
   }
   async findById(userId: UserId): Promise<User | null> {
     return await this.storage.findById(userId);
+  }
+  async verifyToken(token: SignupToken): Promise<boolean> {
+    const signUp = await this.signupTokenStorage.findById(token);
+    if (!signUp) {
+      throw new Error("invalid token");
+    }
+    if (signUp.expiredAt < new Date()) {
+      return false;
+    }
+    return true;
   }
 }
 

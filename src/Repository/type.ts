@@ -32,7 +32,7 @@ export type ToAddresss = string;
 
 export type MailContent = {
   subject: string;
-  text: string;
+  html: string;
 };
 
 export type MailOpts = {
