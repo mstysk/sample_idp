@@ -36,6 +36,9 @@ export const handler: Handlers = {
       email: email.toString(),
     });
   },
+  GET(_req, ctx) {
+    return ctx.render({});
+  },
 };
 
 export default function Signup({ data }: PageProps<SignupData>) {
