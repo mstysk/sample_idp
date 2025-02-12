@@ -4,10 +4,10 @@ export interface StorageEntity {
 }
 
 export interface StorageInterface<T extends StorageEntity> {
-  save(data: T): Promise<T>;
+  save(data: T, prefix?: string, key?: string): Promise<T>;
   update(id: string, data: Partial<T>): Promise<void>;
   findById(id: string): Promise<T | null>;
-  findByKey(key: string, value: string): Promise<T | null>;
+  findByPrefix(prefix: string, value: string): Promise<T | null>;
   delete(id: string): Promise<void>;
 }
 
@@ -20,12 +20,16 @@ export class KVStorage<T extends StorageEntity> implements StorageInterface<T> {
     this.prefix = prefix;
   }
 
-  private createKeySelector(id: string): string[] {
-    return [this.prefix, id];
+  private createKeySelector(identity: string, prefix?: string): string[] {
+    console.log(prefix || this.prefix, identity);
+    return [prefix || this.prefix, identity];
   }
 
-  async save(data: T) {
-    const keySelector = this.createKeySelector(data.id);
+  async save(data: T, prefix?: string, key?: keyof T): Promise<T> {
+    const keySelector = this.createKeySelector(
+      key ? data[key] as string : data.id,
+      prefix,
+    );
     await this.kv.set(keySelector, data);
     return data;
   }
@@ -42,7 +46,15 @@ export class KVStorage<T extends StorageEntity> implements StorageInterface<T> {
     return result.value;
   }
 
-  async findByKey(key: string, value: string): Promise<T | null> {
+  async findByPrefix(
+    prefix: string,
+    value: string,
+  ): Promise<T | null> {
+    if (prefix) {
+      const keySelector = this.createKeySelector(value, prefix);
+      const result = await this.kv.get<T>(keySelector);
+      return result.value;
+    }
     const result = await this.kv.get<T>([this.prefix, key, value]);
     return result.value;
   }

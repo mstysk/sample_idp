@@ -38,12 +38,30 @@ export async function generatePassowrdHash(
   return token;
 }
 
+async function verifyPassword(
+  password: Password,
+  passwordHash: PasswordHash,
+): Promise<boolean> {
+  const [salt, hash] = passwordHash.split(".");
+
+  const encoder = new TextEncoder();
+  const passwordData = encoder.encode(password + salt);
+
+  const hashBuffer = await crypto.subtle.digest("SHA-256", passwordData);
+
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  const hashBase64 = base64Encode(new Uint8Array(hashArray));
+
+  return hashBase64 === hash;
+}
+
 const generateResourceId = (): ResourceId => crypto.randomUUID();
 
 interface User extends StorageEntity {
   id: UserId;
   email: Email;
   createdAt: Date;
+  verifyPassword: (password: Password) => Promise<boolean>;
 }
 
 interface UserSignupToken extends StorageEntity {
@@ -83,7 +101,7 @@ interface UserEvent extends StorageEntity {
   createdAt: Date;
 }
 
-interface UserRepositoryInterface {
+export interface UserRepositoryInterface {
   preregister(email: Email): Promise<SignupToken>;
   register(
     token: SignupToken,
@@ -92,7 +110,9 @@ interface UserRepositoryInterface {
   ): Promise<void>;
   updateStatus(userId: UserId, status: UserActiveStatus): Promise<void>;
   findById(userId: UserId): Promise<User | null>;
+  findByEmail(email: Email): Promise<User | null>;
   verifyToken(token: SignupToken): Promise<boolean>;
+  verifyPassword(userId: UserId, password: Password): Promise<boolean>;
 }
 
 class UserRepository implements UserRepositoryInterface {
@@ -102,6 +122,8 @@ class UserRepository implements UserRepositoryInterface {
   private credentialStorage: StorageInterface<UserCredential>;
   private profileStorage: StorageInterface<UserProfile>;
   private eventStorage: StorageInterface<UserEvent>;
+
+  private emailKey = "user_by_email" as const;
 
   constructor(
     storage: StorageInterface<User>,
@@ -118,6 +140,7 @@ class UserRepository implements UserRepositoryInterface {
     this.profileStorage = profileStorage;
     this.eventStorage = eventStorage;
   }
+
   async preregister(email: Email): Promise<SignupToken> {
     const id = generateResourceId();
     const now = new Date();
@@ -138,6 +161,7 @@ class UserRepository implements UserRepositoryInterface {
     });
     return id;
   }
+
   async register(
     token: SignupToken,
     password: Password,
@@ -149,11 +173,13 @@ class UserRepository implements UserRepositoryInterface {
     if (!signUp) {
       throw new Error("invalid token");
     }
-    await this.storage.save({
+    const user = {
       id,
       email: signUp.email,
       createdAt: new Date(),
-    });
+    } as User;
+    await this.storage.save(user);
+    await this.storage.save(user, this.emailKey, "email");
     await this.profileStorage.save({
       id,
       userId: id,
@@ -191,6 +217,9 @@ class UserRepository implements UserRepositoryInterface {
   async findById(userId: UserId): Promise<User | null> {
     return await this.storage.findById(userId);
   }
+  async findByEmail(email: Email): Promise<User | null> {
+    return await this.storage.findByPrefix(this.emailKey, email);
+  }
   async verifyToken(token: SignupToken): Promise<boolean> {
     const signUp = await this.signupTokenStorage.findById(token);
     if (!signUp) {
@@ -200,6 +229,13 @@ class UserRepository implements UserRepositoryInterface {
       return false;
     }
     return true;
+  }
+  async verifyPassword(userId: UserId, password: Password): Promise<boolean> {
+    const credential = await this.credentialStorage.findById(userId);
+    if (!credential) {
+      return false;
+    }
+    return await verifyPassword(password, credential.passwordHash);
   }
 }
 
