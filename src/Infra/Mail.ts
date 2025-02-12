@@ -17,9 +17,7 @@ class MailService {
   }
 }
 
-const getMailSlurp = async (): Promise<
-  { opts: MailOpts; fromAddress: string }
-> => {
+const getMailSlurp = async (): Promise<MailOpts> => {
   const mailSlurp = new MailSlurp({
     apiKey: Deno.env.get("MAILSLURP_API_KEY") || "",
   });
@@ -27,20 +25,41 @@ const getMailSlurp = async (): Promise<
   const server = await mailSlurp.getImapSmtpAccessDetails();
 
   return {
-    opts: {
-      host: server.smtpServerHost,
-      port: server.smtpServerPort,
-      auth: {
-        user: server.smtpUsername,
-        pass: server.smtpPassword,
-        type: "PLAIN",
-      },
+    host: server.smtpServerHost,
+    port: server.smtpServerPort,
+    auth: {
+      user: server.smtpUsername,
+      pass: server.smtpPassword,
+      type: "PLAIN",
     },
-    fromAddress: server.emailAddress,
   };
 };
 
+const getMailCatcer = (): Promise<MailOpts> => {
+  return Promise.resolve({
+    host: "localhost",
+    port: 1025,
+    auth: {
+      user: "",
+      pass: "",
+      type: "PLAIN",
+    },
+  });
+};
+
+async function getMailer(mailer: string): Promise<MailOpts> {
+  switch (mailer) {
+    case "mailslurp":
+      return await getMailSlurp();
+    case "mailcatcher":
+      return getMailCatcer();
+    default:
+      return getMailSlurp();
+  }
+}
+
 export async function createMailer(): Promise<MailService> {
-  const { opts, fromAddress } = await getMailSlurp();
+  const opts = await getMailer(Deno.env.get("MAILER") || "mailcatcher");
+  const fromAddress = Deno.env.get("FROM_ADDRESS") || "sample@example.com";
   return new MailService(opts, fromAddress);
 }
