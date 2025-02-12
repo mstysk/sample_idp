@@ -1,4 +1,16 @@
 services:
+  idp:
+    image: mstysk/idp:latest
+    environment:
+      JTW_KEY: "${JTW_KEY:-secret}"
+      MAILER: "${MAILER:-mailcatcher}"
+      FROM_ADDRESS: "${FROM:-idp@localhost}"
+      MAILSLURP_API_KEY: "${MAILSLURP_API_KEY:-}"
+    ports:
+      - 8000:8000
+    depends_on:
+      - mailcatcher
+
   mailcatcher:
     image: dockage/mailcatcher:latest
     ports:

@@ -37,7 +37,7 @@ const getMailSlurp = async (): Promise<MailOpts> => {
 
 const getMailCatcer = (): Promise<MailOpts> => {
   return Promise.resolve({
-    host: "localhost",
+    host: "mailcatcher",
     port: 1025,
     auth: {
       user: "",
