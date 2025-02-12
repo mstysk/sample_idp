@@ -61,7 +61,6 @@ interface User extends StorageEntity {
   id: UserId;
   email: Email;
   createdAt: Date;
-  verifyPassword: (password: Password) => Promise<boolean>;
 }
 
 interface UserSignupToken extends StorageEntity {

@@ -1,19 +1,13 @@
-import {
-  AccessToken,
-  AuthTokens,
-  Email,
-  Password,
-  RefreshToken,
-} from "./type.ts";
+import { createJWT } from "../Infra/JWT.ts";
+import { AccessToken, Email, Password } from "./type.ts";
 import { createUserRepository, UserRepositoryInterface } from "./User.ts";
 
 interface AuthenticateRepositoryInterface {
   signin(
     email: Email,
     password: Password,
-  ): Promise<AuthTokens | null>;
-  logout(token: AccessToken): Promise<void>;
-  refresh(refreshToken: RefreshToken): Promise<AuthTokens | null>;
+  ): Promise<AccessToken | null>;
+  refresh(accessToken: AccessToken): Promise<AccessToken | null>;
 }
 
 class AuthenticateRepository implements AuthenticateRepositoryInterface {
@@ -24,8 +18,7 @@ class AuthenticateRepository implements AuthenticateRepositoryInterface {
   ) {
     this.userRepository = userRepository;
   }
-  async signin(email: Email, password: Password): Promise<AuthTokens | null> {
-    console.log(email, password);
+  async signin(email: Email, password: Password): Promise<AccessToken | null> {
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
       return null;
@@ -33,14 +26,17 @@ class AuthenticateRepository implements AuthenticateRepositoryInterface {
     if (!(await this.userRepository.verifyPassword(user.id, password))) {
       return null;
     }
-    return { accessToken: "dummy", refreshToken: "dummy" };
+
+    const accessToken = await createJWT({
+      sub: user.id,
+      email: user.email,
+    });
+
+    return accessToken;
   }
 
-  logout(token: AccessToken): Promise<void> {
-    throw new Error("Method not implemented.");
-  }
-  refresh(refreshToken: RefreshToken): Promise<AuthTokens | null> {
-    throw new Error("Method not implemented.");
+  refresh(_accessToken: AccessToken): Promise<AccessToken | null> {
+    throw new Error("not implemented");
   }
 }
 

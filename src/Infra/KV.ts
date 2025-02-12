@@ -50,12 +50,8 @@ export class KVStorage<T extends StorageEntity> implements StorageInterface<T> {
     prefix: string,
     value: string,
   ): Promise<T | null> {
-    if (prefix) {
-      const keySelector = this.createKeySelector(value, prefix);
-      const result = await this.kv.get<T>(keySelector);
-      return result.value;
-    }
-    const result = await this.kv.get<T>([this.prefix, key, value]);
+    const keySelector = this.createKeySelector(value, prefix);
+    const result = await this.kv.get<T>(keySelector);
     return result.value;
   }
 

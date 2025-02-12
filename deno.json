@@ -13,6 +13,7 @@
   "exclude": ["**/_fresh/*"],
   "imports": {
     "$fresh/": "https://deno.land/x/fresh@1.7.3/",
+    "@std/http": "jsr:@std/http@^1.0.13",
     "mailslurp-client": "npm:mailslurp-client@^15.21.0",
     "nodemailer": "npm:nodemailer@^6.10.0",
     "preact": "https://esm.sh/preact@10.22.0",

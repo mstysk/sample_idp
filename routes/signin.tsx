@@ -1,5 +1,6 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { createAuthenticateRepository } from "../src/Repository/Authenticate.ts";
+import { setCookie } from "jsr:@std/http/cookie";
 
 type SigninData = {
   message: string;
@@ -8,20 +9,45 @@ type SigninData = {
 export const handler: Handlers = {
   async POST(req, ctx) {
     const formData = await req.formData();
-    const email = formData.get("email").toString();
-    const password = formData.get("password").toString();
+    const email = formData.get("email");
+    if (!email) {
+      return ctx.render({
+        message: "Missing required fields",
+      });
+    }
+    const password = formData.get("password");
+    if (!password) {
+      return ctx.render({
+        message: "Missing required fields",
+      });
+    }
     const authenticateRepository = await createAuthenticateRepository();
-    const authTokens = await authenticateRepository.signin(email, password);
-    if (!authTokens) {
+    const accessToken = await authenticateRepository.signin(
+      email.toString(),
+      password.toString(),
+    );
+    if (!accessToken) {
       return ctx.render({
         message: "invalid email or password",
       });
     }
-    const url = new URL(req.url);
-    url.pathname = "/";
-    return Response.redirect(url);
+    const host = req.headers.get("host") || "http://localhost:8000";
+    const url = new URL(host);
+    const headers = new Headers();
+    setCookie(headers, {
+      name: "sess",
+      value: accessToken,
+      httpOnly: true,
+      secure: true,
+      domain: url.hostname,
+      maxAge: 120,
+      sameSite: "Lax",
+      path: "/",
+    });
+    headers.set("Location", "/");
+    return new Response(null, { status: 303, headers });
   },
-  GET(req, ctx) {
+  GET(_req, ctx) {
     return ctx.render({});
   },
 };
