@@ -51,16 +51,39 @@ export const handler: Handlers = {
 export default function Verify({ data }: PageProps<VerifyTokenData>) {
   return (
     <>
-      <h1>User Registration</h1>
-      <form method="post">
+      <h1 className="text-3xl font-bold mb-4">User Registration</h1>
+      <form method="post" className="flex flex-col">
         <input type="hidden" name="token" value={data.token} />
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" />
-        <label for="displayName">DisplayName</label>
-        <input type="text" id="displayName" name="displayName" />
-        <label for="avatarUrl">AvatarUrl</label>
-        <input type="text" id="avatarUrl" name="avatarUrl" />
-        <button type="submit">Register</button>
+        <label className="block mb-2" htmlFor="password">Password</label>
+        <input
+          className="block w-full p-2 mb-4 border border-gray-300 rounded-lg"
+          type="password"
+          id="password"
+          name="password"
+          autocomplete="new-password"
+          required
+        />
+        <label className="block mb-2" htmlFor="displayName">DisplayName</label>
+        <input
+          className="block w-full p-2 mb-4 border border-gray-300 rounded-lg"
+          type="text"
+          id="displayName"
+          name="displayName"
+          required
+        />
+        <label className="block mb-2" htmlFor="avatarUrl">AvatarUrl</label>
+        <input
+          className="block w-full p-2 mb-4 border border-gray-300 rounded-lg"
+          type="url"
+          id="avatarUrl"
+          name="avatarUrl"
+        />
+        <button
+          className="bg-blue-500 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg"
+          type="submit"
+        >
+          Register
+        </button>
       </form>
     </>
   );

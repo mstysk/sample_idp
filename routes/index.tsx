@@ -42,7 +42,7 @@ export default function Home({ data }: PageProps<HomeData>) {
           class="my-6"
           src="/logo.svg"
           width="128"
-          height="128"
+          height="129"
           alt="the Fresh logo: a sliced lemon dripping with juice"
         />
         <h1 class="text-4xl font-bold">Welcome to Fresh</h1>

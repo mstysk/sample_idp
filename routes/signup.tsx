@@ -45,11 +45,22 @@ export default function Signup({ data }: PageProps<SignupData>) {
   return (
     <>
       <p>{data.message}</p>
-      <h1>Signup</h1>
-      <form method="post">
-        <label for="email">E-Mail</label>
-        <input type="email" id="email" name="email" value={data.email} />
-        <button type="submit">PreRegister</button>
+      <h1 className="text-3xl font-bold mb-4">Signup</h1>
+      <form className="flex flex-col" method="post">
+        <label className="block mb-2" htmlFor="email">E-Mail</label>
+        <input
+          className="block w-full p-2 border border-gray-300 rounded-lg mb-4"
+          type="email"
+          id="email"
+          name="email"
+          value={data.email}
+        />
+        <button
+          className="bg-blue-500 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg"
+          type="submit"
+        >
+          PreRegister
+        </button>
       </form>
     </>
   );

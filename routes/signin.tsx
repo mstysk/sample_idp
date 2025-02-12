@@ -31,12 +31,7 @@ export const handler: Handlers = {
         message: "invalid email or password",
       });
     }
-    const scheme = req.headers.get("scheme") || "http";
-    const host = req.headers.get("host") || "localhost";
-    const port = Number(req.headers.get("port") || 8000);
-    const url = (port == 80 || port == 443)
-      ? new URL(`${scheme}://${host}`)
-      : new URL(`${scheme}://${host}:${port}`);
+    const url = new URL(req.url)
     const headers = new Headers();
     setCookie(headers, {
       name: "sess",
@@ -59,15 +54,15 @@ export const handler: Handlers = {
 export default function Signin({ data }: PageProps<SigninData>) {
   return (
     <>
-      <h1>Signin</h1>
-      <p>{data.message}</p>
-      <form method="post">
-        <label for="email">E-Mail</label>
-        <input type="email" id="email" name="email" />
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" />
-        <button type="submit">Signin</button>
-      </form>
+        <h1 className="text-3xl font-bold mb-4">Signin</h1>
+        <p>{data.message}</p>
+        <form method="post" className="flex flex-col">
+          <label className="block mb-2" htmlFor="email">E-Mail</label>
+          <input className="block w-full p-2 mb-4 border border-gray-300 rounded-lg" type="email" id="email" name="email" />
+          <label className="block mb-2" htmlFor="password">Password</label>
+          <input className="block w-full p-2 mb-4 border border-gray-300 rounded-lg" type="password" id="password" name="password" />
+          <button className="bg-blue-500 hover:bg-blue-500 text-white font-bold py-2 px-4 rounded-lg" type="submit">Signin</button>
+        </form>
     </>
   );
 }
