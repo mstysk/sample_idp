@@ -7,6 +7,7 @@ import { PageProps } from "$fresh/server.ts";
 
 type HomeData = {
   sub: string;
+  email: string;
 };
 
 export const handler: Handlers = {

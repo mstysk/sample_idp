@@ -57,6 +57,8 @@ async function verifyPassword(
 
 const generateResourceId = (): ResourceId => crypto.randomUUID();
 
+type UserType = User & UserProfile;
+
 interface User extends StorageEntity {
   id: UserId;
   email: Email;
@@ -108,8 +110,8 @@ export interface UserRepositoryInterface {
     profile: Partial<Profile>,
   ): Promise<void>;
   updateStatus(userId: UserId, status: UserActiveStatus): Promise<void>;
-  findById(userId: UserId): Promise<User | null>;
-  findByEmail(email: Email): Promise<User | null>;
+  findById(userId: UserId): Promise<UserType | null>;
+  findByEmail(email: Email): Promise<UserType | null>;
   verifyToken(token: SignupToken): Promise<boolean>;
   verifyPassword(userId: UserId, password: Password): Promise<boolean>;
 }
@@ -213,11 +215,23 @@ class UserRepository implements UserRepositoryInterface {
   async updateStatus(userId: UserId, status: UserActiveStatus): Promise<void> {
     await this.activeStorage.update(userId, { status });
   }
-  async findById(userId: UserId): Promise<User | null> {
-    return await this.storage.findById(userId);
+  async findById(userId: UserId): Promise<UserType | null> {
+    const u = await this.storage.findById(userId);
+    if (!u) {
+      return null;
+    }
+    const p = await this.profileStorage.findById(userId);
+    if (!p) {
+      return null;
+    }
+    return { ...u, ...p };
   }
   async findByEmail(email: Email): Promise<User | null> {
-    return await this.storage.findByPrefix(this.emailKey, email);
+    const user = await this.storage.findByPrefix(this.emailKey, email);
+    if (!user) {
+      return null;
+    }
+    return this.findById(user.id);
   }
   async verifyToken(token: SignupToken): Promise<boolean> {
     const signUp = await this.signupTokenStorage.findById(token);

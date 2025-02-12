@@ -30,6 +30,8 @@ class AuthenticateRepository implements AuthenticateRepositoryInterface {
     const accessToken = await createJWT({
       sub: user.id,
       email: user.email,
+      displayName: user.displayName,
+      avatarUrl: user.avatarUrl,
     });
 
     return accessToken;
