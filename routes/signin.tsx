@@ -31,8 +31,12 @@ export const handler: Handlers = {
         message: "invalid email or password",
       });
     }
-    const host = req.headers.get("host") || "http://localhost:8000";
-    const url = new URL(host);
+    const scheme = req.headers.get("scheme") || "http";
+    const host = req.headers.get("host") || "localhost";
+    const port = Number(req.headers.get("port") || 8000);
+    const url = (port == 80 || port == 443)
+      ? new URL(`${scheme}://${host}`)
+      : new URL(`${scheme}://${host}:${port}`);
     const headers = new Headers();
     setCookie(headers, {
       name: "sess",
