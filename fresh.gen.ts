@@ -8,6 +8,7 @@ import * as $_layout from "./routes/_layout.tsx";
 import * as $api_joke from "./routes/api/joke.ts";
 import * as $greet_name_ from "./routes/greet/[name].tsx";
 import * as $index from "./routes/index.tsx";
+import * as $logout from "./routes/logout.tsx";
 import * as $signin from "./routes/signin.tsx";
 import * as $signup from "./routes/signup.tsx";
 import * as $signup_verify from "./routes/signup/verify.tsx";
@@ -22,6 +23,7 @@ const manifest = {
     "./routes/api/joke.ts": $api_joke,
     "./routes/greet/[name].tsx": $greet_name_,
     "./routes/index.tsx": $index,
+    "./routes/logout.tsx": $logout,
     "./routes/signin.tsx": $signin,
     "./routes/signup.tsx": $signup,
     "./routes/signup/verify.tsx": $signup_verify,

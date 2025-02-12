@@ -44,7 +44,11 @@ export const handler: Handlers = {
 export default function Signup({ data }: PageProps<SignupData>) {
   return (
     <>
-      <p>{data.message}</p>
+      {data.message && (
+        <p className="bg-green-500 text-white p-4 font-bold mb-2 rounded-lg border">
+          {data.message}
+        </p>
+      )}
       <h1 className="text-3xl font-bold mb-4">Signup</h1>
       <form className="flex flex-col" method="post">
         <label className="block mb-2" htmlFor="email">E-Mail</label>
