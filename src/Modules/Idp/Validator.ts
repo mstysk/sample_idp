@@ -5,7 +5,7 @@ import {
 
 interface ValidaterInterface {
   validate(
-    formData: FormData,
+    params: URLSearchParams,
   ): Promise<AuthorizationQueryParams | QueryParamValidationError>;
 }
 
@@ -33,13 +33,23 @@ type RedirectUri = URL;
 type State = string;
 type Nonce = string;
 
-type AuthorizationQueryParams = {
+export type AuthorizationQueryParams = {
   scope: Scope[];
   responseType: ResponseType;
   clientId: ClientId;
   redirectUri: RedirectUri;
   state: State;
   nonce?: Nonce;
+};
+
+export const isAuthoizationQueryParams = (
+  params: AuthorizationQueryParams | QueryParamValidationError,
+): params is AuthorizationQueryParams => {
+  return "scope" in params &&
+    "responseType" in params &&
+    "clientId" in params &&
+    "redirectUri" in params &&
+    "state" in params;
 };
 
 interface QueryParamValidationError {
@@ -106,8 +116,8 @@ class Validater implements ValidaterInterface {
     this.clientRepostory = clientRepostory;
   }
 
-  async validate(formData: FormData) {
-    const scope = formData.get("scope");
+  async validate(params: URLSearchParams) {
+    const scope = params.get("scope");
 
     const scopes = scope?.toString().split(" ");
     if (typeof scopes === "undefined") {
@@ -118,7 +128,7 @@ class Validater implements ValidaterInterface {
       return new ScopeOnlyOpenid();
     }
 
-    const responseType = formData.get("response_type")?.toString();
+    const responseType = params.get("response_type")?.toString();
 
     if (typeof responseType === "undefined") {
       return new ResponseTypeNotFound();
@@ -127,7 +137,7 @@ class Validater implements ValidaterInterface {
       return new ResponseTypeOnlyCode();
     }
 
-    const clientId = formData.get("client_id")?.toString();
+    const clientId = params.get("client_id")?.toString();
 
     if (typeof clientId === "undefined") {
       return new ClientIdNotFound();
@@ -139,7 +149,7 @@ class Validater implements ValidaterInterface {
       return new ClientNotFound();
     }
 
-    const redirectUriByString = formData.get("redirect_uri")?.toString();
+    const redirectUriByString = params.get("redirect_uri")?.toString();
 
     if (typeof redirectUriByString === "undefined") {
       return new RedirectUriNotFound();
@@ -149,12 +159,12 @@ class Validater implements ValidaterInterface {
       return new RedirectUriNotMatched();
     }
 
-    const state = formData.get("state")?.toString();
+    const state = params.get("state")?.toString();
     if (typeof state === "undefined") {
       return new StateNotFound();
     }
 
-    const nonce = formData.get("nonce")?.toString();
+    const nonce = params.get("nonce")?.toString();
 
     return {
       scope: scopes,
