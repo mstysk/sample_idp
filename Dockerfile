@@ -4,7 +4,10 @@ RUN apk upgrade \
   && apk add --no-cache \
   deno
 
-COPY . .
+RUN adduser -D deno
+
+WORKDIR /app
+COPY . /app
 
 USER deno
 
