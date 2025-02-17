@@ -6,6 +6,9 @@ services:
       MAILER: "${MAILER:-mailcatcher}"
       FROM_ADDRESS: "${FROM:-idp@localhost}"
       MAILSLURP_API_KEY: "${MAILSLURP_API_KEY:-}"
+    volumes:
+      - ./src:/app/src
+      - ./routes/:/app/routes
     ports:
       - 8000:8000
     depends_on:
