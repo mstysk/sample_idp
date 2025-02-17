@@ -8,7 +8,15 @@ export type Profile = {
   avatarUrl: string;
 };
 
+/**
+ * @note SignupToken used by Pre Registration
+ */
 export type SignupToken = string;
+
+/**
+ * @note AuthenticationToken used by Session
+ */
+export type AuthenticationToken = string;
 export type AccessToken = string;
 export type RefreshToken = string;
 export type UserActiveStatus = "pending" | "active" | "suspend" | "deleted";

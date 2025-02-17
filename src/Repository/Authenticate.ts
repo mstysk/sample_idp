@@ -1,6 +1,10 @@
+import { verifyJWT } from "../Infra/JWT.ts";
 import { createJWT } from "../Infra/JWT.ts";
 import { AccessToken, Email, Password } from "./type.ts";
+import { isUserType, UserType } from "./User.ts";
 import { createUserRepository, UserRepositoryInterface } from "./User.ts";
+
+export type decode = (token: AccessToken) => Promise<UserType>;
 
 interface AuthenticateRepositoryInterface {
   signin(
@@ -27,14 +31,7 @@ class AuthenticateRepository implements AuthenticateRepositoryInterface {
       return null;
     }
 
-    const accessToken = await createJWT({
-      sub: user.id,
-      email: user.email,
-      displayName: user.displayName,
-      avatarUrl: user.avatarUrl,
-    });
-
-    return accessToken;
+    return await createJWT(user);
   }
 
   refresh(_accessToken: AccessToken): Promise<AccessToken | null> {
@@ -48,4 +45,19 @@ export async function createAuthenticateRepository(
   return new AuthenticateRepository(
     userRepository || await createUserRepository(),
   );
+}
+
+export async function encode(user: UserType): Promise<AccessToken> {
+  return await createJWT(user) as AccessToken;
+}
+
+export async function decode(token: AccessToken): Promise<UserType> {
+  const ret = await verifyJWT(token);
+  if (!ret) {
+    throw new Error("invalid token");
+  }
+  if (!isUserType(ret)) {
+    throw new Error("invalid token");
+  }
+  return ret;
 }

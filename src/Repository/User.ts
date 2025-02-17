@@ -57,7 +57,15 @@ async function verifyPassword(
 
 const generateResourceId = (): ResourceId => crypto.randomUUID();
 
-type UserType = User & UserProfile;
+export type UserType = User & UserProfile;
+
+export function isUserType(object: object): object is UserType {
+  return "displayName" in object &&
+    "avatarUrl" in object &&
+    "id" in object &&
+    "email" in object &&
+    "createdAt" in object;
+}
 
 interface User extends StorageEntity {
   id: UserId;
@@ -226,7 +234,7 @@ class UserRepository implements UserRepositoryInterface {
     }
     return { ...u, ...p };
   }
-  async findByEmail(email: Email): Promise<User | null> {
+  async findByEmail(email: Email): Promise<UserType | null> {
     const user = await this.storage.findByPrefix(this.emailKey, email);
     if (!user) {
       return null;
