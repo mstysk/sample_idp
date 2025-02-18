@@ -28,7 +28,11 @@ export const handler: Handlers = {
         headers: { location: "/signin" },
       });
     }
-    const idTokenPayload = generateIdTokenPayload(payload, params);
+    const idTokenPayload = generateIdTokenPayload(
+      payload,
+      params,
+      new URL(req.url).origin,
+    );
     const authCodeRepository = await createFromKV();
     const authCode = await authCodeRepository.store(idTokenPayload);
     const redirectUrl = new URL(params.redirectUri);
