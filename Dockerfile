@@ -6,9 +6,9 @@ RUN apk upgrade \
 
 RUN adduser -D deno
 
-WORKDIR /app
-COPY . /app
-
 USER deno
+
+WORKDIR /app
+COPY --chown=deno:deno . /app
 
 CMD ["deno", "run", "start"]
