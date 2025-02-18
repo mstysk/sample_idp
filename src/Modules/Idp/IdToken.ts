@@ -21,6 +21,20 @@ export function generateIdTokenPayload(
   if (!iss) {
     iss = Deno.env.get("ISSUER") || "https://localhost";
   }
+  let payload = {};
+  for (const scope of params.scope) {
+    switch (scope) {
+      case "profile":
+        payload = { ...payload, ...{ name: user.displayName } };
+        break;
+      case "email":
+        payload = { ...payload, ...{ email: user.email } };
+        break;
+      case "picture":
+        payload = { ...payload, ...{ picture: user.avatarUrl } };
+        break;
+    }
+  }
   return {
     iss: iss,
     sub: user.id,
@@ -28,6 +42,7 @@ export function generateIdTokenPayload(
     exp: Math.floor(Date.now() / 1000) + 3600,
     iat: Math.floor(Date.now() / 1000),
     nonce: params.nonce,
+    ...payload,
   };
 }
 
