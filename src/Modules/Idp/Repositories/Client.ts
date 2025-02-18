@@ -11,6 +11,7 @@ interface Client extends StorageEntity {
 
 export interface ClientRepositoryInterface {
   findById(id: ClientId): Promise<Client | null>;
+  authenticate(id: ClientId, secret: ClientSecret): Promise<boolean>;
 }
 
 class ClientRepository implements ClientRepositoryInterface {
@@ -24,6 +25,14 @@ class ClientRepository implements ClientRepositoryInterface {
     return Promise.resolve(
       this.clients.find((client) => client.id === id) || null,
     );
+  }
+
+  async authenticate(id: ClientId, secret: ClientSecret): Promise<boolean> {
+    const client = await this.findById(id);
+    if (!client) {
+      return Promise.resolve(false);
+    }
+    return Promise.resolve(client.secret === secret);
   }
 }
 

@@ -9,6 +9,9 @@ services:
     volumes:
       - ./src:/app/src
       - ./routes/:/app/routes
+      - ./deno.json:/app/deno.json
+      - ./fresh.gen.ts:/app/fresh.gen.ts
+      - ./fresh.config.ts:/app/fresh.config.ts
     ports:
       - 8080:8000
     depends_on:

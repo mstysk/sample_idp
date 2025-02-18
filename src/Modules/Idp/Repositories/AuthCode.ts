@@ -8,7 +8,7 @@ type AuthCode = string;
 
 export interface AuthCodeRepositoryInterface {
   store(payload: JWTPayload): Promise<AuthCode>;
-  findByCode(code: AuthCode): Promise<JWTPayload | null>;
+  findByCode(code: AuthCode): Promise<IdTokenPayload | null>;
   generateAuthCode(): AuthCode;
 }
 
@@ -32,8 +32,9 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface {
     });
     return authCode;
   }
-  async findByCode(code: AuthCode): Promise<AuthCodeEntity | null> {
-    return await this.authCodeStorage.findById(code);
+  async findByCode(code: AuthCode): Promise<IdTokenPayload | null> {
+    const auth = await this.authCodeStorage.findById(code);
+    return auth?.payload || null;
   }
   generateAuthCode() {
     return crypto.randomUUID();

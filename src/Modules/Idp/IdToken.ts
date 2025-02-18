@@ -1,4 +1,4 @@
-import { JWTPayload } from "npm:jose";
+import { JWTPayload, SignJWT } from "npm:jose";
 import { AuthorizationQueryParams } from "./Validator.ts";
 import { UserType } from "../../Repository/User.ts";
 
@@ -29,4 +29,10 @@ export function generateIdTokenPayload(
     iat: Math.floor(Date.now() / 1000),
     nonce: params.nonce,
   };
+}
+
+export async function encodeIdToken(payload: IdTokenPayload): Promise<string> {
+  return await new SignJWT(payload)
+    .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+    .sign(new TextEncoder().encode(Deno.env.get("JWT_SECRET") || ""));
 }
