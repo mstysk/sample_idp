@@ -16,7 +16,9 @@ export const handler: Handlers = {
     const params = await validator.validate(queryParams);
 
     if (!isAuthoizationQueryParams(params)) {
-      return new Response("invalid params", { status: 400 });
+      return new Response("invalid params: " + JSON.stringify(params), {
+        status: 400,
+      });
     }
     const cookies = getCookies(req.headers);
     const payload = await verifyJWT(cookies.sess);

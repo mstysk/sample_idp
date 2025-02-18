@@ -128,6 +128,10 @@ class Validater implements ValidaterInterface {
       return new ScopeOnlyOpenid();
     }
 
+    if (!scopes.includes("openid")) {
+      return new ScopeOnlyOpenid();
+    }
+
     const responseType = params.get("response_type")?.toString();
 
     if (typeof responseType === "undefined") {
