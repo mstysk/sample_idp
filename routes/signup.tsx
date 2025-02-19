@@ -5,7 +5,10 @@ import { PRE_REGISTER_TEMPLATE } from "../src/Repository/Mailer.ts";
 import { createMailer } from "../src/Infra/Mail.ts";
 
 type SignupData = {
-  message?: string;
+  message?: {
+    message: string;
+    color: "green" | "red" | "blue";
+  };
   email?: string;
 };
 
@@ -19,6 +22,16 @@ export const handler: Handlers = {
     }
 
     const userRepsitory = await createUserRepository();
+    const existUser = await userRepsitory.findByEmail(email.toString());
+    if (existUser) {
+      return ctx.render({
+        message: {
+          message: "E-Mail already exists.",
+          color: "red",
+        },
+        email: email.toString(),
+      });
+    }
     const token = await userRepsitory.preregister(email.toString());
 
     const url = new URL(req.url);
@@ -32,7 +45,10 @@ export const handler: Handlers = {
     const mailer = await createMailer();
     await mailer.send(email.toString(), content);
     return ctx.render({
-      message: "send pre-register message. Please check your E-Mail.",
+      message: {
+        message: "send pre-register message. Please check your E-Mail.",
+        color: "green",
+      },
       email: email.toString(),
     });
   },
@@ -42,11 +58,20 @@ export const handler: Handlers = {
 };
 
 export default function Signup({ data }: PageProps<SignupData>) {
+  const colorVariant = {
+    green: "bg-green-500",
+    red: "bg-red-500",
+    blue: "bg-blue-500",
+  };
   return (
     <>
       {data.message && (
-        <p className="bg-green-500 text-white p-4 font-bold mb-2 rounded-lg border">
-          {data.message}
+        <p
+          className={`${
+            colorVariant[data.message.color || "blue"]
+          } text-white p-4 font-bold mb-2 rounded-lg border`}
+        >
+          {data.message.message}
         </p>
       )}
       <h1 className="text-3xl font-bold mb-4">Signup</h1>
