@@ -1,6 +1,6 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { createAuthenticateRepository } from "../src/Repository/Authenticate.ts";
-import { setCookie } from "jsr:@std/http/cookie";
+import { getCookies, setCookie } from "jsr:@std/http/cookie";
 
 type SigninData = {
   message: string;
@@ -43,10 +43,22 @@ export const handler: Handlers = {
       sameSite: "Lax",
       path: "/",
     });
-    headers.set("Location", "/");
+    const cookies = getCookies(req.headers);
+    headers.set(
+      "Location",
+      cookies.signinRedirect ? decodeURIComponent(cookies.signinRedirect) : "/",
+    );
     return new Response(null, { status: 303, headers });
   },
-  GET(_req, ctx) {
+
+  GET(req, ctx) {
+    console.log(req.referrer);
+    if (req.referrer) {
+      setCookie(new Headers(), {
+        name: "signinRedirect",
+        value: new URL(req.referrer).toString(),
+      });
+    }
     return ctx.render({});
   },
 };
