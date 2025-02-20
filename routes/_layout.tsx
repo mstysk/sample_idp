@@ -1,10 +1,14 @@
-import { PageProps} from "$fresh/server.ts"
+import { PageProps } from "$fresh/server.ts";
 
-export default function Layout({Component, state}: PageProps) {
+export default function Layout({ Component, state }: PageProps) {
   return (
-    <div class="container mx-auto p-4 pt-6">
-      <Component />
-    </div>
-  )
+    <>
+      <head>
+        <title>sample_idp</title>
+      </head>
+      <div class="container mx-auto p-4 pt-6">
+        <Component />
+      </div>
+    </>
+  );
 }
-
