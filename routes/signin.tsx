@@ -1,6 +1,11 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { createAuthenticateRepository } from "../src/Repository/Authenticate.ts";
+import { createAuthenticateRepository } from "../src/Modules/Authenticate/Authenticate.ts";
 import { getCookies, setCookie } from "jsr:@std/http/cookie";
+import {
+  clearAuthedRedirect,
+  getAuthedRedirect,
+  withSetCookie,
+} from "../src/Modules/Authenticate/middleware.ts";
 
 type SigninData = {
   message: string;
@@ -32,33 +37,22 @@ export const handler: Handlers = {
       });
     }
     const url = new URL(req.url);
-    const headers = new Headers();
-    setCookie(headers, {
-      name: "sess",
-      value: accessToken,
-      httpOnly: true,
-      secure: true,
-      domain: url.hostname,
-      maxAge: 120,
-      sameSite: "Lax",
-      path: "/",
-    });
-    const cookies = getCookies(req.headers);
+    const headers = withSetCookie(
+      "sess",
+      accessToken,
+      url.hostname,
+      new Headers(),
+    );
+    const authedRedirect = getAuthedRedirect(req);
+    clearAuthedRedirect(headers);
     headers.set(
       "Location",
-      cookies.signinRedirect ? decodeURIComponent(cookies.signinRedirect) : "/",
+      authedRedirect ? authedRedirect : "/",
     );
     return new Response(null, { status: 303, headers });
   },
 
-  GET(req, ctx) {
-    console.log(req.referrer);
-    if (req.referrer) {
-      setCookie(new Headers(), {
-        name: "signinRedirect",
-        value: new URL(req.referrer).toString(),
-      });
-    }
+  GET(_req, ctx) {
     return ctx.render({});
   },
 };

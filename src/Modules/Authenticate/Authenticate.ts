@@ -1,8 +1,12 @@
-import { verifyJWT } from "../Infra/JWT.ts";
-import { createJWT } from "../Infra/JWT.ts";
-import { AccessToken, Email, Password } from "./type.ts";
-import { isUserType, UserType } from "./User.ts";
-import { createUserRepository, UserRepositoryInterface } from "./User.ts";
+import { verifyJWT } from "../../Infra/JWT.ts";
+import { createJWT } from "../../Infra/JWT.ts";
+import { AccessToken, Email, Password } from "../../Repository/type.ts";
+import {
+  createUserRepository,
+  isUserType,
+  UserRepositoryInterface,
+  UserType,
+} from "../../Repository/User.ts";
 
 export type decode = (token: AccessToken) => Promise<UserType>;
 
@@ -11,7 +15,7 @@ interface AuthenticateRepositoryInterface {
     email: Email,
     password: Password,
   ): Promise<AccessToken | null>;
-  refresh(accessToken: AccessToken): Promise<AccessToken | null>;
+  isAuthenticated(token: AccessToken): Promise<boolean>;
 }
 
 class AuthenticateRepository implements AuthenticateRepositoryInterface {
@@ -31,11 +35,12 @@ class AuthenticateRepository implements AuthenticateRepositoryInterface {
       return null;
     }
 
-    return await createJWT(user);
+    return await encode(user);
   }
 
-  refresh(_accessToken: AccessToken): Promise<AccessToken | null> {
-    throw new Error("not implemented");
+  async isAuthenticated(token: AccessToken): Promise<boolean> {
+    const user = await decode(token);
+    return !!user;
   }
 }
 
@@ -51,13 +56,13 @@ export async function encode(user: UserType): Promise<AccessToken> {
   return await createJWT(user) as AccessToken;
 }
 
-export async function decode(token: AccessToken): Promise<UserType> {
+export async function decode(token: AccessToken): Promise<UserType | null> {
   const ret = await verifyJWT(token);
   if (!ret) {
-    throw new Error("invalid token");
+    return null;
   }
   if (!isUserType(ret)) {
-    throw new Error("invalid token");
+    return null;
   }
   return ret;
 }

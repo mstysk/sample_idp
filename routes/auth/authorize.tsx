@@ -1,16 +1,19 @@
 import { Handlers } from "$fresh/server.ts";
-import { getCookies } from "@std/http/cookie";
 import {
   create,
   isAuthoizationQueryParams,
 } from "../../src/Modules/Idp/Validator.ts";
-import { verifyJWT } from "../../src/Infra/JWT.ts";
 import { isUserType } from "../../src/Repository/User.ts";
 import { generateIdTokenPayload } from "../../src/Modules/Idp/IdToken.ts";
 import { createFromKV } from "../../src/Modules/Idp/Repositories/AuthCode.ts";
+import { authCheck } from "../../src/Modules/Authenticate/middleware.ts";
 
 export const handler: Handlers = {
   async GET(req, _ctx) {
+    const authCheckResult = await authCheck(req);
+    if (!isUserType(authCheckResult)) {
+      return authCheckResult;
+    }
     const validator = create();
     const queryParams = new URL(req.url).searchParams;
     const params = await validator.validate(queryParams);
@@ -20,16 +23,8 @@ export const handler: Handlers = {
         status: 400,
       });
     }
-    const cookies = getCookies(req.headers);
-    const payload = await verifyJWT(cookies.sess);
-    if (!payload || !isUserType(payload)) {
-      return new Response(null, {
-        status: 302,
-        headers: { location: "/signin" },
-      });
-    }
     const idTokenPayload = generateIdTokenPayload(
-      payload,
+      authCheckResult,
       params,
       new URL(req.url).origin,
     );
