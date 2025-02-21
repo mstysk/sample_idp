@@ -2,7 +2,8 @@ services:
   idp:
     image: mstysk/idp:latest
     environment:
-      JTW_KEY: "${JTW_KEY:-secret}"
+      JWT_SECRET: "${JWT_SECRET:-secret}"
+      JWT_PUBLIC: "${JWT_PUBLIC:-}"
       MAILER: "${MAILER:-mailcatcher}"
       FROM_ADDRESS: "${FROM:-idp@localhost}"
       MAILSLURP_API_KEY: "${MAILSLURP_API_KEY:-}"
