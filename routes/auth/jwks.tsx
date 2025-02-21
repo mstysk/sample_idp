@@ -1,12 +1,13 @@
 import { Handlers } from "$fresh/server.ts";
 import { exportJWK } from "npm:jose";
 
-import { getPublicKey } from "../../src/Infra/JWK.ts";
+import { getKeyId, getPublicKey } from "../../src/Infra/JWK.ts";
 
 export const handler: Handlers = {
   async GET() {
     const jwk = await exportJWK(await getPublicKey());
-    return new Response(JSON.stringify({ keys: [jwk], hoge: "hoge" }), {
+    jwk.kid = getKeyId();
+    return new Response(JSON.stringify({ keys: [jwk] }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });

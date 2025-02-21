@@ -10,13 +10,20 @@ const publicKey = (): string | null => {
 
 export const getPublicKey = async (): Promise<CryptoKey> => {
   const algorithm = "RS256";
-  const key = publicKey()?.replace(/\\n/g, "\n");
-  console.log(key);
+  const pkey = publicKey()?.replace(/\\n/g, "\n");
   return await importSPKI(
-    key || "",
+    pkey || "",
     algorithm,
     {
       extractable: true,
     },
   );
 };
+
+export function getKeyId(): string {
+  const ret = Deno.env.get("JWT_KEY_ID");
+  if (!ret) {
+    return "DefaultKeyId";
+  }
+  return ret;
+}
