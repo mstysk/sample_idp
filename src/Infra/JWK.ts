@@ -1,6 +1,6 @@
 import { importSPKI } from "npm:jose";
 
-const getPublicKey = (): string | null => {
+const publicKey = (): string | null => {
   const key = Deno.env.get("JWT_PUBLIC");
   if (!key) {
     return null;
@@ -8,12 +8,13 @@ const getPublicKey = (): string | null => {
   return key;
 };
 
-const algorithm = "RS256";
-
-export const publicKey = await importSPKI(
-  getPublicKey() || "",
-  algorithm,
-  {
-    extractable: true,
-  },
-);
+export const getPublicKey = async (): Promise<CryptoKey> => {
+  const algorithm = "RS256";
+  return await importSPKI(
+    publicKey() || "",
+    algorithm,
+    {
+      extractable: true,
+    },
+  );
+};
