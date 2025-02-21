@@ -85,6 +85,16 @@ export default function Signin({ data }: PageProps<SigninData>) {
           Signin
         </button>
       </form>
+      <div>
+        <p>
+          Don&apos;t have an account? useing<a
+            className="pl-2 text-blue-500"
+            href="/signup"
+          >
+            Signup
+          </a>
+        </p>
+      </div>
     </>
   );
 }
