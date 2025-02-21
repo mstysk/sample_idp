@@ -1,7 +1,6 @@
 import { deleteCookie, getCookies, setCookie } from "@std/http/cookie";
 import { UserType } from "../../Repository/User.ts";
 import { decode } from "./Authenticate.ts";
-import { createJWT } from "../../Infra/JWT.ts";
 
 export const AUTHED_REDIRECT_SESS_NAME = "authedRedirect";
 

@@ -29,7 +29,10 @@ export const handler: Handlers = {
       new URL(req.url).origin,
     );
     const authCodeRepository = await createFromKV();
-    const authCode = await authCodeRepository.store(idTokenPayload);
+    const authCode = await authCodeRepository.store(
+      idTokenPayload,
+      params.scope,
+    );
     const redirectUrl = new URL(params.redirectUri);
     redirectUrl.searchParams.set("code", authCode);
     redirectUrl.searchParams.set("state", params.state);

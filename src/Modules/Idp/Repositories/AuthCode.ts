@@ -4,17 +4,19 @@ import { ResourceId } from "../../../Repository/type.ts";
 import { StorageEntity } from "../../../Infra/KV.ts";
 import { KVStorage } from "../../../Infra/KV.ts";
 import { IdTokenPayload } from "../IdToken.ts";
+import { Scope } from "../Validator.ts";
 type AuthCode = string;
 
 export interface AuthCodeRepositoryInterface {
-  store(payload: JWTPayload): Promise<AuthCode>;
-  findByCode(code: AuthCode): Promise<IdTokenPayload | null>;
+  store(payload: JWTPayload, scopes: Scope[]): Promise<AuthCode>;
+  findByCode(code: AuthCode): Promise<AuthCodeEntity | null>;
   generateAuthCode(): AuthCode;
 }
 
 interface AuthCodeEntity extends StorageEntity {
   id: ResourceId;
   payload: IdTokenPayload;
+  scopes: Scope[];
 }
 
 class AuthCodeRepository implements AuthCodeRepositoryInterface {
@@ -24,17 +26,18 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface {
   ) {
     this.authCodeStorage = authCodeStorage;
   }
-  async store(payload: IdTokenPayload): Promise<AuthCode> {
+  async store(payload: IdTokenPayload, scopes: Scope[]): Promise<AuthCode> {
     const authCode = this.generateAuthCode();
     await this.authCodeStorage.save({
       id: authCode,
       payload,
+      scopes,
     });
     return authCode;
   }
-  async findByCode(code: AuthCode): Promise<IdTokenPayload | null> {
+  async findByCode(code: AuthCode): Promise<AuthCodeEntity | null> {
     const auth = await this.authCodeStorage.findById(code);
-    return auth?.payload || null;
+    return auth;
   }
   generateAuthCode() {
     return crypto.randomUUID();

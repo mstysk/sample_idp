@@ -2,6 +2,10 @@ import { Handlers } from "$fresh/server.ts";
 import { createFromEnv } from "../../src/Modules/Idp/Repositories/Client.ts";
 import { createFromKV } from "../../src/Modules/Idp/Repositories/AuthCode.ts";
 import { encodeIdToken } from "../../src/Modules/Idp/IdToken.ts";
+import {
+  BEARER_TYPE,
+  create,
+} from "../../src/Modules/Idp/Repositories/AccessToken.ts";
 
 type ClientId = string;
 type ClientSecret = string;
@@ -17,15 +21,30 @@ export const handler: Handlers = {
       return new Response("invalid code", { status: 400 });
     }
     const authRepository = await createFromKV();
-    const idTokenPayload = await authRepository.findByCode(code.toString());
-    if (!idTokenPayload) {
+    const authCodeEntity = await authRepository.findByCode(code.toString());
+    if (!authCodeEntity) {
       return new Response("invalid code", { status: 400 });
     }
-    const idToken = await encodeIdToken(idTokenPayload);
-    return new Response(JSON.stringify({ id_token: idToken }), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    const idToken = await encodeIdToken(
+      authCodeEntity.payload,
+    );
+    const accessTokenRepository = await create();
+    const accessToken = await accessTokenRepository.save(
+      authCodeEntity.payload.sub,
+      authCodeEntity.scopes,
+      BEARER_TYPE,
+    );
+    return new Response(
+      JSON.stringify({
+        id_token: idToken,
+        access_token: accessToken,
+        token_type: BEARER_TYPE,
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      },
+    );
   },
 };
 

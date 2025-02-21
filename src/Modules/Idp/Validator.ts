@@ -9,7 +9,7 @@ interface ValidaterInterface {
   ): Promise<AuthorizationQueryParams | QueryParamValidationError>;
 }
 
-type Scope = "openid" | "profile" | "email" | "picture";
+export type Scope = "openid" | "profile" | "email" | "picture";
 
 const isScope = (list: string[]): list is Scope[] => {
   return list.every((value) => {
