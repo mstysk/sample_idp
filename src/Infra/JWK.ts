@@ -10,7 +10,7 @@ const publicKey = (): string | null => {
 
 export const getPublicKey = async (): Promise<CryptoKey> => {
   const algorithm = "RS256";
-  const key = publicKey();
+  const key = publicKey()?.replace(/\\n/g, "\n");
   console.log(key);
   return await importSPKI(
     key || "",
