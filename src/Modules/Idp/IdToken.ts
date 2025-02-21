@@ -1,6 +1,13 @@
 import { JWTPayload, SignJWT } from "npm:jose";
-import { AuthorizationQueryParams } from "./Validator.ts";
 import { UserType } from "../../Repository/User.ts";
+import {
+  AuthorizationQueryParams,
+  EmailScope,
+  OpenIdScope,
+  PictureScope,
+  ProfileScope,
+  Scope,
+} from "./Validator.ts";
 
 export interface IdTokenPayload extends JWTPayload {
   iss: string;
@@ -21,20 +28,6 @@ export function generateIdTokenPayload(
   if (!iss) {
     iss = Deno.env.get("ISSUER") || "https://localhost";
   }
-  let payload = {};
-  for (const scope of params.scope) {
-    switch (scope) {
-      case "profile":
-        payload = { ...payload, ...{ name: user.displayName } };
-        break;
-      case "email":
-        payload = { ...payload, ...{ email: user.email } };
-        break;
-      case "picture":
-        payload = { ...payload, ...{ picture: user.avatarUrl } };
-        break;
-    }
-  }
   return {
     iss: iss,
     sub: user.id,
@@ -42,7 +35,7 @@ export function generateIdTokenPayload(
     exp: Math.floor(Date.now() / 1000) + 3600,
     iat: Math.floor(Date.now() / 1000),
     nonce: params.nonce,
-    ...payload,
+    ...pickupClaims(user, params.scope),
   };
 }
 
@@ -50,4 +43,25 @@ export async function encodeIdToken(payload: IdTokenPayload): Promise<string> {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256", typ: "JWT" })
     .sign(new TextEncoder().encode(Deno.env.get("JWT_SECRET") || ""));
+}
+
+export function pickupClaims(
+  user: UserType,
+  scopes: Scope[],
+): Partial<UserType> {
+  let payload = {};
+  for (const scope of scopes) {
+    switch (scope) {
+      case ProfileScope:
+        payload = { ...payload, ...{ name: user.displayName } };
+        break;
+      case EmailScope:
+        payload = { ...payload, ...{ email: user.email } };
+        break;
+      case PictureScope:
+        payload = { ...payload, ...{ picture: user.avatarUrl } };
+        break;
+    }
+  }
+  return payload;
 }

@@ -6,6 +6,7 @@ import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $_layout from "./routes/_layout.tsx";
 import * as $api_joke from "./routes/api/joke.ts";
+import * as $api_user_info from "./routes/api/user-info.ts";
 import * as $auth_authorize from "./routes/auth/authorize.tsx";
 import * as $auth_jwks from "./routes/auth/jwks.tsx";
 import * as $auth_token from "./routes/auth/token.tsx";
@@ -24,6 +25,7 @@ const manifest = {
     "./routes/_app.tsx": $_app,
     "./routes/_layout.tsx": $_layout,
     "./routes/api/joke.ts": $api_joke,
+    "./routes/api/user-info.ts": $api_user_info,
     "./routes/auth/authorize.tsx": $auth_authorize,
     "./routes/auth/jwks.tsx": $auth_jwks,
     "./routes/auth/token.tsx": $auth_token,
