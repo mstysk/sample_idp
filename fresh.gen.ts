@@ -10,7 +10,6 @@ import * as $api_user_info from "./routes/api/user-info.ts";
 import * as $auth_authorize from "./routes/auth/authorize.tsx";
 import * as $auth_jwks from "./routes/auth/jwks.tsx";
 import * as $auth_token from "./routes/auth/token.tsx";
-import * as $greet_name_ from "./routes/greet/[name].tsx";
 import * as $index from "./routes/index.tsx";
 import * as $logout from "./routes/logout.tsx";
 import * as $signin from "./routes/signin.tsx";
@@ -29,7 +28,6 @@ const manifest = {
     "./routes/auth/authorize.tsx": $auth_authorize,
     "./routes/auth/jwks.tsx": $auth_jwks,
     "./routes/auth/token.tsx": $auth_token,
-    "./routes/greet/[name].tsx": $greet_name_,
     "./routes/index.tsx": $index,
     "./routes/logout.tsx": $logout,
     "./routes/signin.tsx": $signin,
