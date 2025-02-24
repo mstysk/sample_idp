@@ -44,7 +44,7 @@ export async function encodeIdToken(
   keyId: string,
 ): Promise<string> {
   return await new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256", typ: "JWT", kid: keyId })
+    .setProtectedHeader({ alg: "RS256", typ: "JWT", kid: keyId })
     .sign(new TextEncoder().encode(Deno.env.get("JWT_SECRET") || ""));
 }
 
