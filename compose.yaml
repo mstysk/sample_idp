@@ -1,6 +1,6 @@
 services:
   idp:
-    image: mstysk/idp:latest
+    image: sample-idp:latest
     environment:
       JWT_SECRET: "${JWT_SECRET:-secret}"
       JWT_PUBLIC: "${JWT_PUBLIC:-}"
