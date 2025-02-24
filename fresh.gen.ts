@@ -15,7 +15,7 @@ import * as $logout from "./routes/logout.tsx";
 import * as $signin from "./routes/signin.tsx";
 import * as $signup from "./routes/signup.tsx";
 import * as $signup_verify from "./routes/signup/verify.tsx";
-import * as $Counter from "./islands/Counter.tsx";
+
 import type { Manifest } from "$fresh/server.ts";
 
 const manifest = {
@@ -34,9 +34,7 @@ const manifest = {
     "./routes/signup.tsx": $signup,
     "./routes/signup/verify.tsx": $signup_verify,
   },
-  islands: {
-    "./islands/Counter.tsx": $Counter,
-  },
+  islands: {},
   baseUrl: import.meta.url,
 } satisfies Manifest;
 
