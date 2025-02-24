@@ -8,6 +8,7 @@ import {
   ProfileScope,
   Scope,
 } from "./Validator.ts";
+import { getPrivateKey } from "../../Infra/JWK.ts";
 
 export interface IdTokenPayload extends JWTPayload {
   iss: string;
@@ -45,7 +46,7 @@ export async function encodeIdToken(
 ): Promise<string> {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "RS256", typ: "JWT", kid: keyId })
-    .sign(new TextEncoder().encode(Deno.env.get("JWT_SECRET") || ""));
+    .sign(await getPrivateKey());
 }
 
 export function pickupClaims(
