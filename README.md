@@ -31,6 +31,14 @@ Demo:
 
 see: https://masatoyoshi-sample-idp-54.deno.dev
 
+TestCase:
+---
+
+OpenId Connect Certification Page: https://www.certification.openid.net/
+
+Simple TestCase Is Passed
+
+![Simple TestCase Is Passed](./docs/certification.png)
 
 License:
 ---
