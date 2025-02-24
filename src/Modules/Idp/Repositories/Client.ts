@@ -38,5 +38,23 @@ class ClientRepository implements ClientRepositoryInterface {
 
 export function createFromEnv(): ClientRepositoryInterface {
   const clients = Deno.env.get("CLIENTS") || "";
-  return new ClientRepository(JSON.parse(clients));
+  return new ClientRepository(JSON.parse(clients).map(parse));
+}
+
+function parse(data: Record<string, string | string[]>): Client {
+  console.log(data);
+  if (!data.id || typeof data.id !== "string") {
+    throw new Error("id is required");
+  }
+  if (!data.redirectUris || !Array.isArray(data.redirectUris)) {
+    throw new Error("redirect_uris is required");
+  }
+  if (!data.secret || typeof data.secret !== "string") {
+    throw new Error("secret is required");
+  }
+  return {
+    id: data.id,
+    redirectUris: data.redirectUris.map((uri) => new URL(uri)),
+    secret: data.secret,
+  };
 }

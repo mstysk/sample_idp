@@ -168,7 +168,7 @@ class Validater implements ValidaterInterface {
       return new RedirectUriNotFound();
     }
     const redirectUri = new URL(redirectUriByString);
-    if (clinet.redirectUris.includes(redirectUri)) {
+    if (!clinet.redirectUris.filter((uri) => uri.href === redirectUri.href)) {
       return new RedirectUriNotMatched();
     }
 
