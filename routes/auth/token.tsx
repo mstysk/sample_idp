@@ -63,7 +63,8 @@ async function clientValidate(headers: Headers, formData: FormData) {
 
 async function basicAuthHeaderValidate(authHeader: string): Promise<boolean> {
   if (authHeader.startsWith("Basic ")) {
-    const [username, password] = atob(authHeader.split(" ")[1]);
+    const token = authHeader.split(" ")[1];
+    const [username, password] = atob(token).split(":");
     return await clientAuthenticate(username, password);
   }
   return false;
