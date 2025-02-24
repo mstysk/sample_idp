@@ -39,9 +39,12 @@ export function generateIdTokenPayload(
   };
 }
 
-export async function encodeIdToken(payload: IdTokenPayload): Promise<string> {
+export async function encodeIdToken(
+  payload: IdTokenPayload,
+  keyId: string,
+): Promise<string> {
   return await new SignJWT(payload)
-    .setProtectedHeader({ alg: "HS256", typ: "JWT" })
+    .setProtectedHeader({ alg: "HS256", typ: "JWT", kid: keyId })
     .sign(new TextEncoder().encode(Deno.env.get("JWT_SECRET") || ""));
 }
 

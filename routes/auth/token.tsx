@@ -6,6 +6,7 @@ import {
   BEARER_TYPE,
   create,
 } from "../../src/Modules/Idp/Repositories/AccessToken.ts";
+import { getKeyId } from "../../src/Infra/JWK.ts";
 
 type ClientId = string;
 type ClientSecret = string;
@@ -27,6 +28,7 @@ export const handler: Handlers = {
     }
     const idToken = await encodeIdToken(
       authCodeEntity.payload,
+      getKeyId(),
     );
     const accessTokenRepository = await create();
     const accessToken = await accessTokenRepository.save(
