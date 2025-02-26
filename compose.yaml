@@ -10,6 +10,7 @@ services:
     volumes:
       - ./src:/app/src
       - ./routes/:/app/routes
+      - ./islands/:/app/islands
       - ./deno.json:/app/deno.json
       - ./fresh.gen.ts:/app/fresh.gen.ts
       - ./fresh.config.ts:/app/fresh.config.ts
