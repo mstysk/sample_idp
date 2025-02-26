@@ -1,10 +1,10 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { createAuthenticateRepository } from "../src/Modules/Authenticate/Authenticate.ts";
 import { getCookies, setCookie } from "jsr:@std/http/cookie";
+import { withSetCookie } from "../src/Infra/Cookies.ts";
 import {
   clearAuthedRedirect,
   getAuthedRedirect,
-  withSetCookie,
 } from "../src/Modules/Authenticate/middleware.ts";
 
 type SigninData = {

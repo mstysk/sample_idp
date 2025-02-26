@@ -1,3 +1,4 @@
+import { withSetCookie } from "../../Infra/Cookies.ts";
 import { deleteCookie, getCookies, setCookie } from "@std/http/cookie";
 import { UserType } from "../../Repository/User.ts";
 import { decode } from "./Authenticate.ts";
@@ -55,24 +56,4 @@ async function createSigninRedirectResponse(req: Request): Promise<Response> {
       ),
     }),
   );
-}
-
-export function withSetCookie(
-  name: string,
-  value: string,
-  domain: string,
-  headers: Headers,
-  maxAge = 60 * 60 * 24 * 30,
-): Headers {
-  setCookie(headers, {
-    name,
-    value,
-    httpOnly: true,
-    secure: true,
-    domain,
-    maxAge,
-    sameSite: "Lax",
-    path: "/",
-  });
-  return headers;
 }
