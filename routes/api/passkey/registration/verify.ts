@@ -1,5 +1,4 @@
 import { Handlers } from "$fresh/server.ts";
-import { getCookies } from "@std/http/cookie";
 import { getRPId } from "./options.ts";
 import { base64url } from "npm:jose";
 import {
@@ -7,6 +6,7 @@ import {
   isExpired,
   sameChallenge,
 } from "../../../../src/Repository/Challenge.ts";
+import { create as createPasskey } from "../../../../src/Repository/Passkey.ts";
 
 type PublicKeyCredential = {
   authenticatorAttachment?: string;
@@ -42,7 +42,7 @@ export const handler: Handlers = {
     const body = await req.json();
     console.log(body);
     const { username, credential } = body;
-    if (!username) {
+    if (!username || typeof username !== "string") {
       return new Response("Missing username", {
         status: 400,
       });
@@ -81,6 +81,17 @@ export const handler: Handlers = {
       console.log("Origin does not match", clientData.origin);
       return new Response(JSON.stringify({ verified: false }));
     }
+
+    // save passkey
+    const passkeyRepository = await createPasskey();
+    await passkeyRepository.save({
+      id: credential.id,
+      userId: username,
+      publicKey: credential.response.publicKey,
+      algorithm: credential.response.publicKeyAlgorithm,
+      transports: credential.response.transports,
+    });
+    await challengeRepository.delete(username);
 
     return new Response(JSON.stringify({ verified: true }));
   },
