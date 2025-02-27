@@ -2,6 +2,7 @@ import { FreshContext } from "$fresh/src/server/mod.ts";
 import { Handlers } from "$fresh/src/server/types.ts";
 import { base64url } from "npm:jose";
 import { withSetCookie } from "../../../../src/Infra/Cookies.ts";
+import { create } from "../../../../src/Repository/Challenge.ts";
 
 type AuthenticatorAttachment = "platform" | "cross-platform";
 type AuthenticatorUserVerification = "preferred" | "required" | "discouraged";
@@ -63,8 +64,14 @@ export const handler: Handlers = {
       });
     }
     const challenge = crypto.getRandomValues(new Uint8Array(32));
-    const kv = await Deno.openKv();
-    await kv.set(["challenge", username.toString()], challenge);
+    const challengeRepository = await create();
+    challengeRepository.save({
+      id: username.toString(),
+      challenge,
+      createdAt: new Date(),
+      expiresAt: new Date(Date.now() + 60000),
+    });
+
     const options = createPublicKeyCredentialCreationOptions(
       username.toString(),
       challenge,

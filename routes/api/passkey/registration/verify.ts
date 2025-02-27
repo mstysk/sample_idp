@@ -2,6 +2,11 @@ import { Handlers } from "$fresh/server.ts";
 import { getCookies } from "@std/http/cookie";
 import { getRPId } from "./options.ts";
 import { base64url } from "npm:jose";
+import {
+  create,
+  isExpired,
+  sameChallenge,
+} from "../../../../src/Repository/Challenge.ts";
 
 type PublicKeyCredential = {
   authenticatorAttachment?: string;
@@ -52,16 +57,20 @@ export const handler: Handlers = {
     const clientData = decodeClientData(credential.response.clientDataJSON);
     console.log(clientData);
 
-    const kv = await Deno.openKv();
-    const challenge = await kv.get(["challenge", username]);
+    const challengeRepository = await create();
+    const challenge = await challengeRepository.findById(username);
+
     if (!challenge) {
       console.log("Challenge not found", username);
       return new Response(JSON.stringify({ verified: false }));
     }
-    if (base64url.encode(challenge.value) !== clientData.challenge) {
+    if (
+      isExpired(challenge) ||
+      !sameChallenge(challenge.challenge, clientData.challenge)
+    ) {
       console.log(
         "Challenge does not match",
-        challenge.value,
+        challenge.challenge,
         clientData.challenge,
       );
       return new Response(JSON.stringify({ verified: false }));
