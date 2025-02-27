@@ -21,7 +21,7 @@ type PublicKeyCredential = {
     authenticatorData?: string;
     clientDataJSON: string;
     publicKey: string;
-    publicKeyAlgorithm: string;
+    publicKeyAlgorithm: number;
     transports: string[];
   };
 };
