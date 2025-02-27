@@ -8,6 +8,7 @@ export interface StorageInterface<T extends StorageEntity> {
   update(id: string, data: Partial<T>): Promise<void>;
   findById(id: string): Promise<T | null>;
   findByPrefix(prefix: string, value: string): Promise<T | null>;
+  listByPrefix(prefix: string, value: string): Promise<T[]>;
   delete(id: string): Promise<void>;
 }
 
@@ -53,6 +54,16 @@ export class KVStorage<T extends StorageEntity> implements StorageInterface<T> {
     const keySelector = this.createKeySelector(value, prefix);
     const result = await this.kv.get<T>(keySelector);
     return result.value;
+  }
+
+  async listByPrefix(prefix: string, value: string): Promise<T[]> {
+    const keySelector = this.createKeySelector(value, prefix);
+    const result = this.kv.list<T>({ prefix: keySelector });
+    const values = [];
+    for await (const { key: _key, value } of result) {
+      values.push(value);
+    }
+    return values;
   }
 
   async delete(id: string): Promise<void> {
