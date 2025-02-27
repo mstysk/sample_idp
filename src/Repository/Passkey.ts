@@ -4,7 +4,7 @@ interface Passkey extends StorageEntity {
   id: string;
   userId: string;
   publicKey: string;
-  algorithm: string;
+  algorithm: number;
   transports: string[];
 }
 
@@ -30,8 +30,9 @@ class PasskeyRepository implements PasskeyRepositoryInterface {
     return await this.storage.listByPrefix(this.userIdKey, userId);
   }
   async save(data: Passkey): Promise<void> {
+    console.log(data);
     await this.storage.save(data);
-    await this.storage.save(data, this.userIdKey, data.userId);
+    await this.storage.save(data, this.userIdKey, "userId");
   }
   async delete(id: string): Promise<void> {
     await this.storage.delete(id);
