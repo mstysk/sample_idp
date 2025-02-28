@@ -28,7 +28,7 @@ export default function Passkey() {
       return;
     }
 
-    const options = await getAuthenticationOptions(usernameVal);
+    const options = await getRegistrationOptions(usernameVal);
 
     const credential = await navigator.credentials.create({
       publicKey: options,
@@ -66,7 +66,7 @@ export default function Passkey() {
   );
 }
 
-async function getAuthenticationOptions(
+async function getRegistrationOptions(
   username: string,
 ): Promise<PublicKeyCredentialCreationOptions> {
   const options = await fetch("/api/passkey/registration/options", {
