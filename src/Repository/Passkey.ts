@@ -27,12 +27,12 @@ class PasskeyRepository implements PasskeyRepositoryInterface {
     return await this.storage.findById(id);
   }
   async findByUserId(userId: string): Promise<Passkey[]> {
-    return await this.storage.listByPrefix(this.userIdKey, userId);
+    return await this.storage.listByPrefix(this.userIdKey, `${userId}:`);
   }
   async save(data: Passkey): Promise<void> {
     console.log(data);
     await this.storage.save(data);
-    await this.storage.save(data, this.userIdKey, "userId");
+    await this.storage.save(data, this.userIdKey, `${data.userId}:${data.id}`);
   }
   async delete(id: string): Promise<void> {
     await this.storage.delete(id);
