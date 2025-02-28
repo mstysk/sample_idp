@@ -22,13 +22,14 @@ export class KVStorage<T extends StorageEntity> implements StorageInterface<T> {
   }
 
   private createKeySelector(identity: string, prefix?: string): string[] {
-    console.log(prefix || this.prefix, identity);
-    return [prefix || this.prefix, identity];
+    const selector = [prefix || this.prefix, identity];
+    console.log(selector);
+    return selector;
   }
 
   async save(data: T, prefix?: string, key?: keyof T): Promise<T> {
     const keySelector = this.createKeySelector(
-      key ? data[key] as string : data.id,
+      key ? (data[key] || key) as string : data.id,
       prefix,
     );
     await this.kv.set(keySelector, data);
@@ -56,14 +57,17 @@ export class KVStorage<T extends StorageEntity> implements StorageInterface<T> {
     return result.value;
   }
 
-  async listByPrefix(prefix: string, value: string): Promise<T[]> {
-    const keySelector = this.createKeySelector(value, prefix);
-    const result = this.kv.list<T>({ prefix: keySelector });
-    const values = [];
-    for await (const { key: _key, value } of result) {
-      values.push(value);
+  async listByPrefix(prefix: string, condition: string): Promise<T[]> {
+    const iter = this.kv.list<T>({ prefix: [prefix] });
+    const result: T[] = [];
+    for await (const { key, value } of iter) {
+      const userKey = key[1] as string;
+      if (!userKey.startsWith(condition)) {
+        continue;
+      }
+      result.push(value);
     }
-    return values;
+    return result;
   }
 
   async delete(id: string): Promise<void> {
