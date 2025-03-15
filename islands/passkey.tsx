@@ -37,12 +37,55 @@ export default function Passkey() {
       alert("Failed to create credential");
       return;
     }
-    const verified = await verifyAuthentication(
+    const verified = await verifyRegistration(
       credential,
       usernameVal,
     );
     if (!verified) {
       alert("Failed to verify credential");
+      return;
+    }
+    alert("Success");
+    return;
+  };
+
+  const handleAuthenticator = async (event: Event) => {
+    event.preventDefault();
+
+    if (
+      typeof globalThis.PublicKeyCredential === "undefined" ||
+      typeof globalThis.PublicKeyCredential.isConditionalMediationAvailable ===
+        "undefined"
+    ) {
+      alert("Your browser does not support WebAuthn");
+      return;
+    }
+
+    const avaiable = await globalThis.PublicKeyCredential
+      .isConditionalMediationAvailable();
+    if (!avaiable) {
+      alert("Your browser does not support WebAuthn");
+      return;
+    }
+
+    const usernameVal = username.current.value;
+
+    const options = await getAuthenticationOptions(usernameVal);
+
+    const credential = await navigator.credentials.get({
+      publicKey: options,
+    });
+
+    console.log(credential);
+
+    if (!credential) {
+      alert("Failed to get credential");
+      return;
+    }
+
+    const ret = await signin(credential, usernameVal);
+    if (!ret) {
+      alert("Failed to sign in");
       return;
     }
     alert("Success");
@@ -61,7 +104,7 @@ export default function Passkey() {
         ref={username}
       />
       <button type="button" onClick={handleRegister}>Register</button>
-      <button type="button" onClick={() => {}}>Authenticate</button>
+      <button type="button" onClick={handleAuthenticator}>Authenticate</button>
     </div>
   );
 }
@@ -89,7 +132,7 @@ async function getRegistrationOptions(
   };
 }
 
-async function verifyAuthentication(
+async function verifyRegistration(
   credential: Credential,
   username: string,
 ): Promise<boolean> {
@@ -108,4 +151,46 @@ async function verifyAuthentication(
   }
   const ret = await verify.json();
   return ret.verified;
+}
+// Authenticate functions
+
+async function getAuthenticationOptions(
+  username: string,
+) {
+  const options = await fetch("/api/passkey/authentication/options", {
+    method: "POST",
+    headers: {
+      "Conent-Type": "application/json",
+    },
+    body: JSON.stringify({ username }),
+  });
+  if (!options.ok) {
+    return false;
+  }
+  const ret = await options.json();
+  return {
+    ...ret,
+    challenge: base64url.decode(ret.challenge),
+    allowCredentials: ret.allowCredentials.map((c) => ({
+      ...c,
+      id: base64url.decode(c.id),
+    })),
+  };
+}
+
+async function signin(payload, username): Promise<boolean> {
+  const ret = await fetch("/api/passkey/authentication/signin", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      credential: payload,
+      username,
+    }),
+  });
+  if (!ret.ok) {
+    return false;
+  }
+  return true;
 }

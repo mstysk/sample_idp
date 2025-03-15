@@ -13,17 +13,21 @@
   "exclude": ["**/_fresh/*"],
   "imports": {
     "$fresh/": "https://deno.land/x/fresh@1.7.3/",
+    "@passwordless-id/webauthn": "npm:@passwordless-id/webauthn@^2.2.0",
     "@std/http": "jsr:@std/http@^1.0.13",
     "mailslurp-client": "npm:mailslurp-client@^15.21.0",
     "nodemailer": "npm:nodemailer@^6.10.0",
+    "postcss": "npm:postcss@^8.5.3",
     "preact": "https://esm.sh/preact@10.22.0",
     "preact/": "https://esm.sh/preact@10.22.0/",
     "@preact/signals": "https://esm.sh/*@preact/signals@1.2.2",
     "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.5.1",
-    "tailwindcss": "npm:tailwindcss@3.4.1",
-    "tailwindcss/": "npm:/tailwindcss@3.4.1/",
-    "tailwindcss/plugin": "npm:/tailwindcss@3.4.1/plugin.js",
-    "$std/": "https://deno.land/std@0.216.0/"
+    "tailwindcss": "npm:tailwindcss@^3.4.17",
+    "tailwindcss/": "npm:/tailwindcss@3.4.17/",
+    "tailwindcss/plugin": "npm:/tailwindcss@3.4.17/plugin.js",
+    "$std/": "https://deno.land/std@0.216.0/",
+    "@passwordless-id/webauthn": "https://esm.sh/@passwordless-id/webauthn",
+    "@passwordless-id/webauthn/": "https://esm.sh/@passwordless-id/webauthn/"  
   },
   "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "preact" },
   "nodeModulesDir": "auto"

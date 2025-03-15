@@ -3,7 +3,7 @@ import { KVStorage } from "../Infra/KV.ts";
 import { StorageInterface } from "../Infra/KV.ts";
 import { StorageEntity } from "../Infra/KV.ts";
 
-interface Challenge extends StorageEntity {
+export interface Challenge extends StorageEntity {
   challenge: ChallengeBuf;
   createdAt: Date;
   expiresAt: Date;

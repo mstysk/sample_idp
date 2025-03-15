@@ -6,6 +6,8 @@ import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $_layout from "./routes/_layout.tsx";
 import * as $api_joke from "./routes/api/joke.ts";
+import * as $api_passkey_authentication_options from "./routes/api/passkey/authentication/options.ts";
+import * as $api_passkey_authentication_signin from "./routes/api/passkey/authentication/signin.ts";
 import * as $api_passkey_registration_options from "./routes/api/passkey/registration/options.ts";
 import * as $api_passkey_registration_verify from "./routes/api/passkey/registration/verify.ts";
 import * as $api_user_info from "./routes/api/user-info.ts";
@@ -27,6 +29,10 @@ const manifest = {
     "./routes/_app.tsx": $_app,
     "./routes/_layout.tsx": $_layout,
     "./routes/api/joke.ts": $api_joke,
+    "./routes/api/passkey/authentication/options.ts":
+      $api_passkey_authentication_options,
+    "./routes/api/passkey/authentication/signin.ts":
+      $api_passkey_authentication_signin,
     "./routes/api/passkey/registration/options.ts":
       $api_passkey_registration_options,
     "./routes/api/passkey/registration/verify.ts":

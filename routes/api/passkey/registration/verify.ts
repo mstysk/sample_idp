@@ -106,7 +106,7 @@ function isPublicKeyCredential(
   return true;
 }
 
-function decodeClientData(buf: string): ClientData {
+export function decodeClientData(buf: string): ClientData {
   const byte = base64url.decode(buf);
   const str = new TextDecoder().decode(byte);
   return JSON.parse(str);
