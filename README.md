@@ -11,6 +11,7 @@ Features:
 - Management of authentication codes
 - Client authentication
 - Only Authorization Code Grand Support
+- Passkey Authenticate Support
 
 Requirements:
 ---
