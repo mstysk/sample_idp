@@ -24,7 +24,10 @@ export async function verifyJWT(token: string): Promise<JWTPayload | null> {
     const { payload } = await jwtVerify(token, secret);
     return payload;
   } catch (error) {
-    console.error("JWT verification failed:", error instanceof Error ? error.message : String(error));
+    console.error(
+      "JWT verification failed:",
+      error instanceof Error ? error.message : String(error),
+    );
     return null;
   }
 }

@@ -144,7 +144,10 @@ export const handler: Handlers = {
         );
       }
     } catch (error) {
-      console.error("Passkey authentication error:", error instanceof Error ? error.message : String(error));
+      console.error(
+        "Passkey authentication error:",
+        error instanceof Error ? error.message : String(error),
+      );
       return new Response(
         JSON.stringify({
           verified: false,
