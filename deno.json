@@ -27,7 +27,7 @@
     "tailwindcss/plugin": "npm:/tailwindcss@3.4.17/plugin.js",
     "$std/": "https://deno.land/std@0.216.0/",
     "@passwordless-id/webauthn": "https://esm.sh/@passwordless-id/webauthn",
-    "@passwordless-id/webauthn/": "https://esm.sh/@passwordless-id/webauthn/"  
+    "@passwordless-id/webauthn/": "https://esm.sh/@passwordless-id/webauthn/"
   },
   "compilerOptions": { "jsx": "react-jsx", "jsxImportSource": "preact" },
   "nodeModulesDir": "auto"

@@ -5,7 +5,7 @@ export const handler: Handlers = {
   POST(req, _ctx) {
     const headers = new Headers();
     const url = new URL(req.url);
-    deleteCookie(headers, "sess", { domain: url.hostname});
+    deleteCookie(headers, "sess", { domain: url.hostname });
     headers.set("Location", "/");
 
     return new Response(null, {

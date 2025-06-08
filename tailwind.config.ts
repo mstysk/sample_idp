@@ -11,4 +11,3 @@ export default {
     "@tailwindcss/postcss",
   ],
 } satisfies Config;
-

@@ -42,7 +42,10 @@ export default function Home({ data }: PageProps<HomeData>) {
       </h1>
       <p className="text-lg mb-4">{data.user.email}</p>
       <form method="post" action="/logout">
-        <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">
+        <button
+          type="submit"
+          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg"
+        >
           Logout
         </button>
       </form>

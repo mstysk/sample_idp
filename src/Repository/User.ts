@@ -178,10 +178,10 @@ class UserRepository implements UserRepositoryInterface {
   ): Promise<void> {
     const id = generateResourceId();
     const signUp = await this.signupTokenStorage.findById(token);
-    const passwordHash = await generatePassowrdHash(password);
     if (!signUp) {
-      throw new Error("invalid token");
+      throw new Error("Invalid signup token");
     }
+    const passwordHash = await generatePassowrdHash(password);
     const user = {
       id,
       email: signUp.email,
@@ -244,10 +244,10 @@ class UserRepository implements UserRepositoryInterface {
   async verifyToken(token: SignupToken): Promise<boolean> {
     const signUp = await this.signupTokenStorage.findById(token);
     if (!signUp) {
-      throw new Error("invalid token");
+      throw new Error("Invalid signup token");
     }
     if (signUp.expiredAt < new Date()) {
-      return false;
+      throw new Error("Signup token has expired");
     }
     return true;
   }

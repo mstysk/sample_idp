@@ -46,10 +46,10 @@ export const handler: Handlers = {
   },
 };
 
-export default function Authroize() {
+export default function Authorize() {
   return (
     <>
-      <h1>Authroize</h1>
+      <h1>Authorize</h1>
       <form method="post">
       </form>
     </>

@@ -3,7 +3,6 @@ import { UserType } from "../../Repository/User.ts";
 import {
   AuthorizationQueryParams,
   EmailScope,
-  OpenIdScope,
   PictureScope,
   ProfileScope,
   Scope,

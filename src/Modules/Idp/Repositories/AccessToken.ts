@@ -18,7 +18,7 @@ interface AccessTokenEntity extends StorageEntity {
   type: AccessTokenType;
 }
 
-interface AccessTokenRepositoryInterface {
+export interface AccessTokenRepositoryInterface {
   findById(id: ResourceId): Promise<AccessTokenEntity | null>;
   save(
     userId: UserId,

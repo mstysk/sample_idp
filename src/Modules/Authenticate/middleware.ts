@@ -1,5 +1,5 @@
 import { withSetCookie } from "../../Infra/Cookies.ts";
-import { deleteCookie, getCookies, setCookie } from "@std/http/cookie";
+import { deleteCookie, getCookies } from "@std/http/cookie";
 import { UserType } from "../../Repository/User.ts";
 import { decode } from "./Authenticate.ts";
 
@@ -40,7 +40,7 @@ const clearAuthedRedirect: ClearAuthedRedirect = function (headers: Headers) {
 
 export { authCheck, clearAuthedRedirect, getAuthedRedirect };
 
-async function createSigninRedirectResponse(req: Request): Promise<Response> {
+function createSigninRedirectResponse(req: Request): Promise<Response> {
   const headers = new Headers();
 
   headers.set("Location", "/signin");

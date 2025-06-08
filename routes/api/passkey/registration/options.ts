@@ -1,7 +1,6 @@
 import { FreshContext } from "$fresh/src/server/mod.ts";
 import { Handlers } from "$fresh/src/server/types.ts";
 import { base64url } from "npm:jose";
-import { withSetCookie } from "../../../../src/Infra/Cookies.ts";
 import { create } from "../../../../src/Repository/Challenge.ts";
 
 type AuthenticatorAttachment = "platform" | "cross-platform";

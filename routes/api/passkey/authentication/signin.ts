@@ -126,12 +126,14 @@ export const handler: Handlers = {
         signature,
         signatureBase,
       );
-      console.log({
-        algorithm: getHashAlgoritm(passkey.algorithm),
-        isValid,
-        signatureBaseLength: signatureBase.byteLength,
-        signatureLength: signature.byteLength,
-      });
+      if (Deno.env.get("DEBUG")) {
+        console.debug("Passkey signature verification:", {
+          algorithm: getHashAlgoritm(passkey.algorithm),
+          isValid,
+          signatureBaseLength: signatureBase.byteLength,
+          signatureLength: signature.byteLength,
+        });
+      }
       if (!isValid) {
         return new Response(
           JSON.stringify({
@@ -142,7 +144,7 @@ export const handler: Handlers = {
         );
       }
     } catch (error) {
-      console.log(error);
+      console.error("Passkey authentication error:", error instanceof Error ? error.message : String(error));
       return new Response(
         JSON.stringify({
           verified: false,
@@ -185,7 +187,8 @@ function isAuthenticatePayload(
     return false;
   }
 
-  if (payload.response === null || typeof payload.response !== "object") {
+  const p = payload as Record<string, unknown>;
+  if (p.response === null || typeof p.response !== "object") {
     return false;
   }
 

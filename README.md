@@ -1,11 +1,10 @@
-Sample IdProvider
-===
+# Sample IdProvider
 
-This repository contains a sample implementation of an Identity Provider(IDP) using TypeScript.
-It includes authentication and authorization features and is built with Deno.
+This repository contains a sample implementation of an Identity Provider(IDP)
+using TypeScript. It includes authentication and authorization features and is
+built with Deno.
 
-Features:
----
+## Features:
 
 - User authentication using JWT
 - Management of authentication codes
@@ -13,27 +12,23 @@ Features:
 - Only Authorization Code Grand Support
 - Passkey Authenticate Support
 
-Requirements:
----
+## Requirements:
 
 - Docker
 - Docker Compose
 
-Usage:
----
+## Usage:
 
 ```sh
 docker build -t sample-idp:latest .
 docker compose up -d
 ```
 
-Demo:
----
+## Demo:
 
 see: https://masatoyoshi-sample-idp-54.deno.dev
 
-TestCase:
----
+## TestCase:
 
 OpenId Connect Certification Page: https://www.certification.openid.net/
 
@@ -41,7 +36,6 @@ Simple TestCase Is Passed
 
 ![Simple TestCase Is Passed](./docs/certification.png)
 
-License:
----
+## License:
 
 MIT
