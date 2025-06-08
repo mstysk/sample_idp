@@ -5,21 +5,25 @@
 ## 基本的な使用方法
 
 ### 1. カバレッジ付きでテスト実行
+
 ```bash
 deno task test:coverage
 ```
 
 ### 2. カバレッジレポート表示
+
 ```bash
 deno task coverage
 ```
 
 ### 3. HTMLレポート生成
+
 ```bash
 deno task coverage:html
 ```
 
 ### 4. 詳細レポート表示
+
 ```bash
 deno task coverage:detailed
 ```
@@ -27,12 +31,14 @@ deno task coverage:detailed
 ## Web UIでカバレッジレポートを確認
 
 ### HTMLレポートをNginxで表示
+
 ```bash
 # HTMLレポート生成とNginxサーバー起動
 deno task coverage:serve
 ```
 
 ### 手動でサーバー起動
+
 ```bash
 # HTMLレポート生成
 deno task coverage:html
@@ -42,10 +48,12 @@ docker-compose up coverage -d
 ```
 
 ### アクセス方法
+
 - カバレッジレポート: http://localhost:8090/coverage/
 - トップページ: http://localhost:8090/
 
 ### サーバー停止
+
 ```bash
 docker-compose down coverage
 ```
@@ -64,12 +72,14 @@ docker-compose down coverage
 - 全体のブランチカバレッジ: 79.6%
 
 ### 高いカバレッジのファイル
+
 - Cookies.ts: 100%
 - middleware.ts: 80.6%
 - IdToken.ts: 86.0%
 - Validator.ts: 84.6%
 
 ### 改善が必要なファイル
+
 - JWK.ts: 2.7%
 - KV.ts: 3.3%
 - User.ts: 16.7%

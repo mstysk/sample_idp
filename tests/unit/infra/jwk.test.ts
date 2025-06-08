@@ -1,5 +1,9 @@
 import { assertEquals, assertThrows } from "@std/assert";
-import { getPublicKey, getPrivateKey, getKeyId } from "../../../src/Infra/JWK.ts";
+import {
+  getKeyId,
+  getPrivateKey,
+  getPublicKey,
+} from "../../../src/Infra/JWK.ts";
 
 // Mock RSA key pairs for testing
 const testPrivateKey = `-----BEGIN PRIVATE KEY-----
@@ -45,17 +49,17 @@ amOwtah/Gd1+mPSti+wub2NQeBdqh/SvF+2Nwur59meSyUm6Q9vY2gkLQIDAQAB
 Deno.test("JWK - getKeyId should return default key ID when not set", () => {
   // Clear environment variable
   Deno.env.delete("JWT_KEY_ID");
-  
+
   const keyId = getKeyId();
   assertEquals(keyId, "DefaultKeyId");
 });
 
 Deno.test("JWK - getKeyId should return custom key ID when set", () => {
   Deno.env.set("JWT_KEY_ID", "test-key-id");
-  
+
   const keyId = getKeyId();
   assertEquals(keyId, "test-key-id");
-  
+
   // Cleanup
   Deno.env.delete("JWT_KEY_ID");
 });
@@ -63,7 +67,7 @@ Deno.test("JWK - getKeyId should return custom key ID when set", () => {
 Deno.test("JWK - getPublicKey should throw error when JWT_PUBLIC not set", async () => {
   // Clear environment variable
   Deno.env.delete("JWT_PUBLIC");
-  
+
   await assertThrows(
     async () => await getPublicKey(),
     Error,
@@ -72,11 +76,11 @@ Deno.test("JWK - getPublicKey should throw error when JWT_PUBLIC not set", async
 
 Deno.test("JWK - getPublicKey should work with valid public key", async () => {
   Deno.env.set("JWT_PUBLIC", testPublicKey);
-  
+
   const publicKey = await getPublicKey();
   assertEquals(publicKey.type, "public");
   assertEquals(publicKey.algorithm.name, "RSASSA-PKCS1-v1_5");
-  
+
   // Cleanup
   Deno.env.delete("JWT_PUBLIC");
 });
@@ -85,10 +89,10 @@ Deno.test("JWK - getPublicKey should handle newline replacement", async () => {
   // Test with escaped newlines
   const keyWithEscapedNewlines = testPublicKey.replace(/\n/g, "\\n");
   Deno.env.set("JWT_PUBLIC", keyWithEscapedNewlines);
-  
+
   const publicKey = await getPublicKey();
   assertEquals(publicKey.type, "public");
-  
+
   // Cleanup
   Deno.env.delete("JWT_PUBLIC");
 });
@@ -96,7 +100,7 @@ Deno.test("JWK - getPublicKey should handle newline replacement", async () => {
 Deno.test("JWK - getPrivateKey should throw error when JWT_SECRET not set", async () => {
   // Clear environment variable
   Deno.env.delete("JWT_SECRET");
-  
+
   await assertThrows(
     async () => await getPrivateKey(),
     Error,
@@ -105,11 +109,11 @@ Deno.test("JWK - getPrivateKey should throw error when JWT_SECRET not set", asyn
 
 Deno.test("JWK - getPrivateKey should work with valid private key", async () => {
   Deno.env.set("JWT_SECRET", testPrivateKey);
-  
+
   const privateKey = await getPrivateKey();
   assertEquals(privateKey.type, "private");
   assertEquals(privateKey.algorithm.name, "RSASSA-PKCS1-v1_5");
-  
+
   // Cleanup
   Deno.env.delete("JWT_SECRET");
 });
@@ -118,10 +122,10 @@ Deno.test("JWK - getPrivateKey should handle newline replacement", async () => {
   // Test with escaped newlines
   const keyWithEscapedNewlines = testPrivateKey.replace(/\n/g, "\\n");
   Deno.env.set("JWT_SECRET", keyWithEscapedNewlines);
-  
+
   const privateKey = await getPrivateKey();
   assertEquals(privateKey.type, "private");
-  
+
   // Cleanup
   Deno.env.delete("JWT_SECRET");
 });
@@ -129,17 +133,17 @@ Deno.test("JWK - getPrivateKey should handle newline replacement", async () => {
 Deno.test("JWK - should handle empty string keys", async () => {
   Deno.env.set("JWT_PUBLIC", "");
   Deno.env.set("JWT_SECRET", "");
-  
+
   await assertThrows(
     async () => await getPublicKey(),
     Error,
   );
-  
+
   await assertThrows(
     async () => await getPrivateKey(),
     Error,
   );
-  
+
   // Cleanup
   Deno.env.delete("JWT_PUBLIC");
   Deno.env.delete("JWT_SECRET");
