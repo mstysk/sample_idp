@@ -19,6 +19,8 @@ Deno.test("KVStorage - should create storage instance", async () => {
 
   assertEquals(typeof storage, "object");
   assertEquals(storage instanceof KVStorage, true);
+
+  storage.close();
 });
 
 Deno.test("KVStorage - should save and find by id", async () => {
@@ -42,6 +44,7 @@ Deno.test("KVStorage - should save and find by id", async () => {
 
   // Cleanup
   await storage.delete("test-id-1");
+  storage.close();
 });
 
 Deno.test("KVStorage - should save with custom prefix and key", async () => {
@@ -63,6 +66,7 @@ Deno.test("KVStorage - should save with custom prefix and key", async () => {
 
   // Cleanup - delete from original storage
   await storage.delete("test-id-2");
+  storage.close();
 });
 
 Deno.test("KVStorage - should update existing data", async () => {
@@ -87,6 +91,7 @@ Deno.test("KVStorage - should update existing data", async () => {
 
   // Cleanup
   await storage.delete("test-id-3");
+  storage.close();
 });
 
 Deno.test("KVStorage - should return null for non-existent id", async () => {
@@ -94,6 +99,8 @@ Deno.test("KVStorage - should return null for non-existent id", async () => {
 
   const found = await storage.findById("non-existent-id");
   assertEquals(found, null);
+
+  storage.close();
 });
 
 Deno.test("KVStorage - should return null for non-existent prefix", async () => {
@@ -101,6 +108,8 @@ Deno.test("KVStorage - should return null for non-existent prefix", async () => 
 
   const found = await storage.findByPrefix("non_existent_prefix", "value");
   assertEquals(found, null);
+
+  storage.close();
 });
 
 Deno.test("KVStorage - should list by prefix with condition", async () => {
@@ -137,6 +146,7 @@ Deno.test("KVStorage - should list by prefix with condition", async () => {
   for (const user of users) {
     await storage.delete(user.id);
   }
+  storage.close();
 });
 
 Deno.test("KVStorage - should delete data", async () => {
@@ -160,6 +170,8 @@ Deno.test("KVStorage - should delete data", async () => {
   // Verify it's deleted
   found = await storage.findById("test-id-delete");
   assertEquals(found, null);
+
+  storage.close();
 });
 
 Deno.test("KVStorage - should handle save with key as keyof T", async () => {
@@ -171,15 +183,23 @@ Deno.test("KVStorage - should handle save with key as keyof T", async () => {
     email: "keyof@example.com",
   };
 
-  // Save using email as key
+  // Save using email as key - this creates an additional entry with email as the key
   await storage.save(testData, undefined, "email");
+  
+  // Also save with the default id key so we can find it by id
+  await storage.save(testData);
 
   // Should be able to find by id (default behavior)
   const found = await storage.findById("test-keyof-1");
   assertEquals(found?.email, "keyof@example.com");
 
+  // Should also be able to find by the custom key (email)
+  const foundByEmail = await storage.findByPrefix("test_keyof", "keyof@example.com");
+  assertEquals(foundByEmail?.id, "test-keyof-1");
+
   // Cleanup
   await storage.delete("test-keyof-1");
+  storage.close();
 });
 
 Deno.test("KVStorage - should handle complex listByPrefix scenarios", async () => {
@@ -214,4 +234,5 @@ Deno.test("KVStorage - should handle complex listByPrefix scenarios", async () =
   for (const data of testData) {
     await storage.delete(data.id);
   }
+  storage.close();
 });

@@ -10,9 +10,9 @@ Deno.env.set(
 );
 
 const testUser: UserType = {
-  id: "test-user-id",
+  sub: "test-user-id",
   email: "test@example.com",
-  displayName: "Test User",
+  name: "Test User",
   avatarUrl: "https://example.com/avatar.jpg",
   userId: "test-user-id",
   createdAt: new Date(),
@@ -64,7 +64,7 @@ Deno.test("Security - authCheck should return user with valid session", async ()
   // Should return UserType, not Response
   assertEquals(result instanceof Response, false);
   if (!(result instanceof Response)) {
-    assertEquals(result.id, testUser.id);
+    assertEquals(result.id, testUser.sub);
     assertEquals(result.email, testUser.email);
   }
 });
@@ -98,6 +98,6 @@ Deno.test("Security - authCheck should handle multiple cookies", async () => {
 
   assertEquals(result instanceof Response, false);
   if (!(result instanceof Response)) {
-    assertEquals(result.id, testUser.id);
+    assertEquals(result.id, testUser.sub);
   }
 });

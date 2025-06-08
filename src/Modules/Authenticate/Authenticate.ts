@@ -16,6 +16,7 @@ interface AuthenticateRepositoryInterface {
     password: Password,
   ): Promise<AccessToken | null>;
   isAuthenticated(token: AccessToken): Promise<boolean>;
+  close(): void;
 }
 
 class AuthenticateRepository implements AuthenticateRepositoryInterface {
@@ -42,10 +43,14 @@ class AuthenticateRepository implements AuthenticateRepositoryInterface {
     const user = await decode(token);
     return !!user;
   }
+
+  close(): void {
+    this.userRepository.close();
+  }
 }
 
 export async function createAuthenticateRepository(
-  userRepository = null,
+  userRepository?: UserRepositoryInterface | null,
 ): Promise<AuthenticateRepositoryInterface> {
   return new AuthenticateRepository(
     userRepository || await createUserRepository(),
@@ -53,16 +58,35 @@ export async function createAuthenticateRepository(
 }
 
 export async function encode(user: UserType): Promise<AccessToken> {
-  return await createJWT(user) as AccessToken;
+  const payload = {
+    sub: user.id,
+    email: user.email,
+    name: user.displayName,
+    picture: user.avatarUrl,
+  };
+  return await createJWT(payload) as AccessToken;
 }
 
 export async function decode(token: AccessToken): Promise<UserType | null> {
-  const ret = await verifyJWT(token);
-  if (!ret) {
+  const payload = await verifyJWT(token);
+  if (!payload) {
     return null;
   }
-  if (!isUserType(ret)) {
+
+  // Check if payload has required fields for UserType
+  if (!payload.sub || !payload.email || !payload.name) {
     return null;
   }
-  return ret;
+
+  // Reconstruct UserType from JWT payload
+  const user = {
+    id: payload.sub as string,
+    userId: payload.sub as string,
+    email: payload.email as string,
+    displayName: payload.name as string,
+    avatarUrl: (payload.picture as string) || "",
+    createdAt: new Date(), // This will be a new date, but it's needed for UserType
+  };
+
+  return user;
 }

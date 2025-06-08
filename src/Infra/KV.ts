@@ -10,11 +10,13 @@ export interface StorageInterface<T extends StorageEntity> {
   findByPrefix(prefix: string, value: string): Promise<T | null>;
   listByPrefix(prefix: string, value: string): Promise<T[]>;
   delete(id: string): Promise<void>;
+  close(): void;
 }
 
 export class KVStorage<T extends StorageEntity> implements StorageInterface<T> {
   private kv: Deno.Kv;
   private prefix: string;
+  private isClosed = false;
 
   constructor(kv: Deno.Kv, prefix: string) {
     this.kv = kv;
@@ -23,7 +25,6 @@ export class KVStorage<T extends StorageEntity> implements StorageInterface<T> {
 
   private createKeySelector(identity: string, prefix?: string): string[] {
     const selector = [prefix || this.prefix, identity];
-    console.log(selector);
     return selector;
   }
 
@@ -74,6 +75,13 @@ export class KVStorage<T extends StorageEntity> implements StorageInterface<T> {
     const keySelector = this.createKeySelector(id);
     await this.kv.delete(keySelector);
     return;
+  }
+
+  close(): void {
+    if (!this.isClosed) {
+      this.kv.close();
+      this.isClosed = true;
+    }
   }
 
   static async create<T extends StorageEntity>(

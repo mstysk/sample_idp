@@ -66,7 +66,7 @@ jobs:
           JWT_KEY_ID: test-key-id
         run: |
           echo "Running tests..."
-          deno test --allow-all --unstable-kv --no-check --coverage=cov_profile tests/integration/ tests/security/ tests/unit/infra/jwt.test.ts tests/unit/modules/authenticate/authenticate.test.ts tests/unit/modules/idp/ tests/unit/repository/user.test.ts || echo "Some tests failed, continuing for coverage..."
+          deno test --allow-all --unstable-kv --no-check --coverage=cov_profile tests/
 
       - name: Generate coverage report
         run: |

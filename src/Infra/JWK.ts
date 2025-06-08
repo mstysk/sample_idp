@@ -2,7 +2,7 @@ import { importPKCS8, importSPKI } from "npm:jose";
 
 const publicKey = (): string | null => {
   const key = Deno.env.get("JWT_PUBLIC");
-  if (!key) {
+  if (!key || key.trim() === "") {
     return null;
   }
   return key;
@@ -10,7 +10,7 @@ const publicKey = (): string | null => {
 
 const privateKey = (): string | null => {
   const key = Deno.env.get("JWT_SECRET");
-  if (!key) {
+  if (!key || key.trim() === "") {
     return null;
   }
   return key;
@@ -19,8 +19,11 @@ const privateKey = (): string | null => {
 export const getPublicKey = async (): Promise<CryptoKey> => {
   const algorithm = "RS256";
   const pkey = publicKey()?.replace(/\\n/g, "\n");
+  if (!pkey) {
+    throw new Error("JWT_PUBLIC environment variable is required");
+  }
   return await importSPKI(
-    pkey || "",
+    pkey,
     algorithm,
     {
       extractable: true,
@@ -31,7 +34,10 @@ export const getPublicKey = async (): Promise<CryptoKey> => {
 export const getPrivateKey = async (): Promise<CryptoKey> => {
   const algorithm = "RS256";
   const pkey = privateKey()?.replace(/\\n/g, "\n");
-  return await importPKCS8(pkey || "", algorithm);
+  if (!pkey) {
+    throw new Error("JWT_SECRET environment variable is required");
+  }
+  return await importPKCS8(pkey, algorithm);
 };
 
 export function getKeyId(): string {

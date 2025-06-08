@@ -37,8 +37,13 @@ class ClientRepository implements ClientRepositoryInterface {
 }
 
 export function createFromEnv(): ClientRepositoryInterface {
-  const clients = Deno.env.get("CLIENTS") || "";
-  return new ClientRepository(JSON.parse(clients).map(parse));
+  const clients = Deno.env.get("CLIENTS") || "[]";
+  try {
+    return new ClientRepository(JSON.parse(clients).map(parse));
+  } catch (error) {
+    console.warn("Failed to parse CLIENTS environment variable:", error);
+    return new ClientRepository([]);
+  }
 }
 
 function parse(data: Record<string, string | string[]>): Client {

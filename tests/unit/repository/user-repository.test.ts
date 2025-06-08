@@ -1,9 +1,8 @@
-import { assertEquals, assertThrows } from "@std/assert";
+import { assertEquals } from "@std/assert";
 import {
   createUserRepository,
   generatePassowrdHash,
 } from "../../../src/Repository/User.ts";
-import { KVStorage } from "../../../src/Infra/KV.ts";
 
 // Mock test interfaces to match the User repository types
 interface TestUser {
@@ -61,6 +60,8 @@ Deno.test("UserRepository - should create repository instance", async () => {
   assertEquals(typeof repository.findByEmail, "function");
   assertEquals(typeof repository.verifyPassword, "function");
   assertEquals(typeof repository.verifyToken, "function");
+
+  repository.close();
 });
 
 Deno.test("UserRepository - should preregister user", async () => {
@@ -75,6 +76,8 @@ Deno.test("UserRepository - should preregister user", async () => {
   // Verify token should be valid
   const isValid = await repository.verifyToken(token);
   assertEquals(isValid, true);
+
+  repository.close();
 });
 
 Deno.test("UserRepository - should register user after preregistration", async () => {
@@ -98,6 +101,8 @@ Deno.test("UserRepository - should register user after preregistration", async (
   assertEquals(user?.email, email);
   assertEquals(user?.displayName, "Test User");
   assertEquals(user?.avatarUrl, "https://example.com/avatar.jpg");
+
+  repository.close();
 });
 
 Deno.test("UserRepository - should verify password correctly", async () => {
@@ -125,6 +130,8 @@ Deno.test("UserRepository - should verify password correctly", async () => {
     "wrong-password",
   );
   assertEquals(isInvalidPassword, false);
+
+  repository.close();
 });
 
 Deno.test("UserRepository - should handle non-existent user password verification", async () => {
@@ -135,6 +142,8 @@ Deno.test("UserRepository - should handle non-existent user password verificatio
     "any-password",
   );
   assertEquals(result, false);
+
+  repository.close();
 });
 
 Deno.test("UserRepository - should find user by id", async () => {
@@ -156,6 +165,8 @@ Deno.test("UserRepository - should find user by id", async () => {
   assertEquals(userById?.id, userByEmail.id);
   assertEquals(userById?.email, email);
   assertEquals(userById?.displayName, "Find By ID User");
+
+  repository.close();
 });
 
 Deno.test("UserRepository - should return null for non-existent user by id", async () => {
@@ -163,6 +174,8 @@ Deno.test("UserRepository - should return null for non-existent user by id", asy
 
   const user = await repository.findById("non-existent-id");
   assertEquals(user, null);
+
+  repository.close();
 });
 
 Deno.test("UserRepository - should return null for non-existent user by email", async () => {
@@ -170,33 +183,37 @@ Deno.test("UserRepository - should return null for non-existent user by email", 
 
   const user = await repository.findByEmail("nonexistent@example.com");
   assertEquals(user, null);
+
+  repository.close();
 });
 
 Deno.test("UserRepository - should throw error for invalid signup token", async () => {
   const repository = await createUserRepository();
 
-  await assertThrows(
-    async () => {
-      await repository.register("invalid-token", "password", {
-        displayName: "Test",
-        avatarUrl: "",
-      });
-    },
-    Error,
-    "Invalid signup token",
-  );
+  try {
+    await repository.register("invalid-token", "password", {
+      displayName: "Test",
+      avatarUrl: "",
+    });
+    throw new Error("Expected function to throw");
+  } catch (error) {
+    assertEquals((error as Error).message, "Invalid signup token");
+  }
+
+  repository.close();
 });
 
 Deno.test("UserRepository - should throw error for invalid token verification", async () => {
   const repository = await createUserRepository();
 
-  await assertThrows(
-    async () => {
-      await repository.verifyToken("invalid-token");
-    },
-    Error,
-    "Invalid signup token",
-  );
+  try {
+    await repository.verifyToken("invalid-token");
+    throw new Error("Expected function to throw");
+  } catch (error) {
+    assertEquals((error as Error).message, "Invalid signup token");
+  }
+
+  repository.close();
 });
 
 Deno.test("UserRepository - should throw error for expired token", async () => {
@@ -204,12 +221,14 @@ Deno.test("UserRepository - should throw error for expired token", async () => {
 
   // This test would require mocking time or creating an expired token
   // For now, we'll test the path with a token that doesn't exist
-  await assertThrows(
-    async () => {
-      await repository.verifyToken("expired-token");
-    },
-    Error,
-  );
+  try {
+    await repository.verifyToken("expired-token");
+    throw new Error("Expected function to throw");
+  } catch (error) {
+    assertEquals(typeof (error as Error).message, "string");
+  }
+
+  repository.close();
 });
 
 Deno.test("UserRepository - should update user status", async () => {
@@ -231,6 +250,8 @@ Deno.test("UserRepository - should update user status", async () => {
 
   // Note: We can't easily verify this without exposing the status in the user interface
   // But we're testing that the method runs without error
+
+  repository.close();
 });
 
 Deno.test("UserRepository - password hashing should be consistent", async () => {
@@ -262,4 +283,6 @@ Deno.test("UserRepository - should handle special characters in profile", async 
   const user = await repository.findByEmail(email);
   assertEquals(user?.displayName, "Test 特殊文字 User");
   assertEquals(user?.avatarUrl, "https://example.com/picture.jpg");
+
+  repository.close();
 });

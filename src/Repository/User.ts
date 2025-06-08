@@ -122,6 +122,7 @@ export interface UserRepositoryInterface {
   findByEmail(email: Email): Promise<UserType | null>;
   verifyToken(token: SignupToken): Promise<boolean>;
   verifyPassword(userId: UserId, password: Password): Promise<boolean>;
+  close(): void;
 }
 
 class UserRepository implements UserRepositoryInterface {
@@ -257,6 +258,15 @@ class UserRepository implements UserRepositoryInterface {
       return false;
     }
     return await verifyPassword(password, credential.passwordHash);
+  }
+
+  close(): void {
+    this.storage.close();
+    this.signupTokenStorage.close();
+    this.activeStorage.close();
+    this.credentialStorage.close();
+    this.profileStorage.close();
+    this.eventStorage.close();
   }
 }
 

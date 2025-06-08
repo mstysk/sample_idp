@@ -27,7 +27,9 @@ const authCheck: AuthCheck = async function (req) {
   if (!sess) {
     return await createSigninRedirectResponse(req);
   }
+  console.log("authCheck sess", sess);
   const user = await decode(sess);
+  console.log("authCheck user", user);
   if (!user) {
     return await createSigninRedirectResponse(req);
   }

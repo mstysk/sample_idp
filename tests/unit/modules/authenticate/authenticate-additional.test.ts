@@ -5,6 +5,7 @@ import {
   encode,
 } from "../../../../src/Modules/Authenticate/Authenticate.ts";
 import { createUserRepository } from "../../../../src/Repository/User.ts";
+import type { Profile } from "../../../../src/Repository/type.ts";
 
 // Set up test environment
 Deno.env.set(
@@ -18,26 +19,34 @@ Deno.test("AuthenticateRepository - should create repository with default user r
   assertEquals(typeof authRepo, "object");
   assertEquals(typeof authRepo.signin, "function");
   assertEquals(typeof authRepo.isAuthenticated, "function");
+
+  authRepo.close();
 });
 
 Deno.test("AuthenticateRepository - should create repository with custom user repository", async () => {
   const userRepo = await createUserRepository();
-  const authRepo = await createAuthenticateRepository(userRepo as any);
+  const authRepo = await createAuthenticateRepository(userRepo);
 
   assertEquals(typeof authRepo, "object");
   assertEquals(typeof authRepo.signin, "function");
   assertEquals(typeof authRepo.isAuthenticated, "function");
+
+  authRepo.close();
 });
 
 Deno.test("AuthenticateRepository - should signin with valid credentials", async () => {
   const userRepo = await createUserRepository();
-  const authRepo = await createAuthenticateRepository(userRepo as any);
+  const authRepo = await createAuthenticateRepository(userRepo);
 
   // Create a test user
   const email = "signin@example.com";
   const password = "signin-password";
   const token = await userRepo.preregister(email);
-  await userRepo.register(token, password, { name: "Signin User" } as any);
+  await userRepo.register(
+    token,
+    password,
+    { displayName: "Signin User", avatarUrl: "" } as Profile,
+  );
 
   // Test signin
   const accessToken = await authRepo.signin(email, password);
@@ -46,6 +55,9 @@ Deno.test("AuthenticateRepository - should signin with valid credentials", async
   if (accessToken) {
     assertEquals(accessToken.length > 0, true);
   }
+
+  userRepo.close();
+  authRepo.close();
 });
 
 Deno.test("AuthenticateRepository - should return null for invalid email", async () => {
@@ -57,11 +69,13 @@ Deno.test("AuthenticateRepository - should return null for invalid email", async
     "password",
   );
   assertEquals(accessToken, null);
+
+  authRepo.close();
 });
 
 Deno.test("AuthenticateRepository - should return null for invalid password", async () => {
   const userRepo = await createUserRepository();
-  const authRepo = await createAuthenticateRepository(userRepo as any);
+  const authRepo = await createAuthenticateRepository(userRepo);
 
   // Create a test user
   const email = "invalidpass@example.com";
@@ -70,12 +84,15 @@ Deno.test("AuthenticateRepository - should return null for invalid password", as
   await userRepo.register(
     token,
     password,
-    { name: "Invalid Pass User" } as any,
+    { displayName: "Invalid Pass User", avatarUrl: "" } as Profile,
   );
 
   // Test signin with wrong password
   const accessToken = await authRepo.signin(email, "wrong-password");
   assertEquals(accessToken, null);
+
+  userRepo.close();
+  authRepo.close();
 });
 
 Deno.test("AuthenticateRepository - should authenticate valid token", async () => {
@@ -86,7 +103,11 @@ Deno.test("AuthenticateRepository - should authenticate valid token", async () =
   const email = "auth@example.com";
   const password = "auth-password";
   const token = await userRepo.preregister(email);
-  await userRepo.register(token, password, { name: "Auth User" } as any);
+  await userRepo.register(
+    token,
+    password,
+    { displayName: "Auth User", avatarUrl: "" } as Profile,
+  );
 
   // Get access token
   const accessToken = await authRepo.signin(email, password);
@@ -95,6 +116,9 @@ Deno.test("AuthenticateRepository - should authenticate valid token", async () =
   // Test authentication
   const isAuthenticated = await authRepo.isAuthenticated(accessToken);
   assertEquals(isAuthenticated, true);
+
+  userRepo.close();
+  authRepo.close();
 });
 
 Deno.test("AuthenticateRepository - should not authenticate invalid token", async () => {
@@ -102,6 +126,8 @@ Deno.test("AuthenticateRepository - should not authenticate invalid token", asyn
 
   const isAuthenticated = await authRepo.isAuthenticated("invalid-token");
   assertEquals(isAuthenticated, false);
+
+  authRepo.close();
 });
 
 Deno.test("Authenticate - encode should create valid JWT", async () => {
@@ -133,9 +159,9 @@ Deno.test("Authenticate - decode should return user from valid token", async () 
   const token = await encode(user);
   const decoded = await decode(token);
 
-  assertEquals(decoded?.sub, user.id);
+  assertEquals(decoded?.id, user.id);
   assertEquals(decoded?.email, user.email);
-  assertEquals(decoded?.name, user.displayName);
+  assertEquals(decoded?.displayName, user.displayName);
 });
 
 Deno.test("Authenticate - decode should return null for invalid token", async () => {
@@ -166,9 +192,9 @@ Deno.test("Authenticate - should handle user without optional fields", async () 
   const token = await encode(user);
   const decoded = await decode(token);
 
-  assertEquals(decoded?.sub, user.id);
+  assertEquals(decoded?.id, user.id);
   assertEquals(decoded?.email, user.email);
-  assertEquals(decoded?.name, user.displayName);
+  assertEquals(decoded?.displayName, user.displayName);
 });
 
 Deno.test("Authenticate - should handle round trip encoding/decoding", async () => {
@@ -183,17 +209,12 @@ Deno.test("Authenticate - should handle round trip encoding/decoding", async () 
 
   // Encode then decode
   const token = await encode(originalUser);
+  console.log("Encoded JWT:", token);
   const decoded = await decode(token);
+  console.log("Decoded User:", decoded);
 
   // Verify all fields match
-  assertEquals(decoded?.sub, originalUser.id);
+  assertEquals(decoded?.id, originalUser.id);
   assertEquals(decoded?.email, originalUser.email);
-  assertEquals(decoded?.name, originalUser.displayName);
-
-  // JWT should have standard claims
-  assertEquals(typeof decoded?.iat, "number");
-  assertEquals(typeof decoded?.exp, "number");
-  if (decoded?.exp && decoded?.iat) {
-    assertEquals((decoded.exp as number) > (decoded.iat as number), true);
-  }
+  assertEquals(decoded?.displayName, originalUser.displayName);
 });
