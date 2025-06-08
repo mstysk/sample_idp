@@ -9,3 +9,5 @@
 _fresh/
 # npm dependencies
 node_modules/
+# Test coverage directory
+cov_profile/

@@ -24,3 +24,13 @@ services:
     ports:
       - 1080:1080
       - 1025:1025
+
+  coverage:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    ports:
+      - 8090:80
+    volumes:
+      - ./cov_profile/html:/usr/share/nginx/html/coverage:ro
+    restart: unless-stopped

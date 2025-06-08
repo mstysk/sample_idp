@@ -9,7 +9,13 @@
     "preview": "deno run -A main.ts",
     "update": "deno run -A -r https://fresh.deno.dev/update .",
     "test": "deno test --allow-all --unstable-kv",
-    "test:watch": "deno test --allow-all --unstable-kv --watch"
+    "test:watch": "deno test --allow-all --unstable-kv --watch",
+    "test:coverage": "deno test --allow-all --unstable-kv --coverage=cov_profile",
+    "coverage": "deno coverage cov_profile",
+    "coverage:html": "deno coverage cov_profile --html",
+    "coverage:detailed": "deno coverage cov_profile --detailed",
+    "coverage:serve": "deno task coverage:html && docker run -d --name coverage-server -p 8090:80 -v \"$(pwd)/cov_profile/html:/usr/share/nginx/html/coverage:ro\" coverage-nginx",
+    "coverage:stop": "docker stop coverage-server && docker rm coverage-server"
   },
   "lint": { "rules": { "tags": ["fresh", "recommended"] } },
   "exclude": ["**/_fresh/*"],
