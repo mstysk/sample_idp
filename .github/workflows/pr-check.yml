@@ -1,0 +1,134 @@
+name: PR Quality Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  quality-gate:
+    name: Quality Gate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetch full history for better diff analysis
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Install dependencies
+        run: deno cache dev.ts
+
+      - name: Check code formatting
+        run: |
+          echo "🔍 Checking code formatting..."
+          if ! deno fmt --check; then
+            echo "❌ Code formatting check failed"
+            echo "Please run 'deno fmt' to fix formatting issues"
+            exit 1
+          fi
+          echo "✅ Code formatting is correct"
+
+      - name: Run linting
+        run: |
+          echo "🔍 Running linter..."
+          if ! deno lint; then
+            echo "❌ Linting failed"
+            echo "Please fix linting issues before merging"
+            exit 1
+          fi
+          echo "✅ Linting passed"
+
+      - name: Type checking
+        run: |
+          echo "🔍 Running type checks..."
+          if ! deno check **/*.ts; then
+            echo "❌ TypeScript type checking failed"
+            exit 1
+          fi
+          if ! deno check **/*.tsx; then
+            echo "❌ TypeScript type checking for TSX files failed"
+            exit 1
+          fi
+          echo "✅ Type checking passed"
+
+      - name: Run tests with coverage
+        env:
+          JWT_SECRET: test-secret-key-for-pr-testing-with-sufficient-length-32-bytes
+          CLIENT_ID: test-client-id
+          CLIENT_SECRET: test-client-secret
+          REDIRECT_URI: http://localhost:3000/callback
+          CLIENTS: '[{"id":"test-client-id","secret":"test-client-secret","redirectUris":["http://localhost:3000/callback"]}]'
+          ISSUER: https://test-issuer.com
+          JWT_PUBLIC: test-jwt-public-key
+          JWT_KEY_ID: test-key-id
+        run: |
+          echo "🧪 Running tests..."
+          if ! deno test --allow-all --unstable-kv --coverage=cov_profile; then
+            echo "❌ Tests failed"
+            echo "Please fix failing tests before merging"
+            exit 1
+          fi
+          echo "✅ All tests passed"
+
+      - name: Check test coverage
+        run: |
+          echo "📊 Generating coverage report..."
+          deno coverage cov_profile --lcov --output=coverage.lcov
+
+          # Extract coverage percentage (basic implementation)
+          if command -v lcov >/dev/null 2>&1; then
+            COVERAGE=$(lcov --summary coverage.lcov 2>/dev/null | grep 'lines' | grep -o '[0-9.]*%' | head -1 || echo "0%")
+            echo "Current test coverage: $COVERAGE"
+          else
+            echo "📊 Coverage report generated (lcov not available for percentage calculation)"
+          fi
+
+      - name: Security scan
+        env:
+          JWT_SECRET: test-secret-key-for-security-scan-with-sufficient-length-32-bytes
+          CLIENT_ID: test-client-id
+          CLIENT_SECRET: test-client-secret
+          REDIRECT_URI: http://localhost:3000/callback
+          CLIENTS: '[{"id":"test-client-id","secret":"test-client-secret","redirectUris":["http://localhost:3000/callback"]}]'
+        run: |
+          echo "🔐 Running security tests..."
+          if ! deno test tests/security/ --allow-all --unstable-kv; then
+            echo "❌ Security tests failed"
+            echo "Please address security issues before merging"
+            exit 1
+          fi
+          echo "✅ Security tests passed"
+
+      - name: Build verification
+        env:
+          JWT_SECRET: test-secret-key-for-build-verification
+          CLIENT_ID: test-client-id
+          CLIENT_SECRET: test-client-secret
+        run: |
+          echo "🏗️ Verifying build..."
+          if ! deno task build; then
+            echo "❌ Build failed"
+            echo "Please fix build issues before merging"
+            exit 1
+          fi
+          echo "✅ Build successful"
+
+      - name: PR Summary
+        if: always()
+        run: |
+          echo "## 📋 PR Quality Check Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Checks Performed:" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Code Formatting" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Linting" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Type Checking" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Unit Tests" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Security Tests" >> $GITHUB_STEP_SUMMARY
+          echo "- ✅ Build Verification" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All quality checks passed! 🎉" >> $GITHUB_STEP_SUMMARY

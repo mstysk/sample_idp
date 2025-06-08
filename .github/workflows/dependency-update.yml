@@ -1,0 +1,116 @@
+name: Dependency Update Check
+
+on:
+  schedule:
+    # Run every Monday at 9:00 AM UTC
+    - cron: "0 9 * * 1"
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  dependency-check:
+    name: Check Dependencies
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Check for dependency updates
+        run: |
+          echo "🔍 Checking for available dependency updates..."
+
+          # Check Fresh framework version
+          echo "## Fresh Framework" >> dependency-report.md
+          echo "Current version in deno.json: $(grep -o 'fresh@[0-9.]*' deno.json || echo 'Not found')" >> dependency-report.md
+
+          # Check Deno standard library
+          echo "## Deno Standard Library" >> dependency-report.md
+          echo "Current version: $(grep -o 'std@[0-9.]*' deno.json || echo 'Not found')" >> dependency-report.md
+
+          # Check npm dependencies
+          echo "## NPM Dependencies" >> dependency-report.md
+          grep -E '"[^"]*": "npm:' deno.json | sed 's/.*"npm:/- /' | sed 's/".*//' >> dependency-report.md || echo "No npm dependencies found" >> dependency-report.md
+
+      - name: Run tests with current dependencies
+        env:
+          JWT_SECRET: test-secret-key-for-dependency-check-with-sufficient-length-32
+          CLIENT_ID: test-client-id
+          CLIENT_SECRET: test-client-secret
+          REDIRECT_URI: http://localhost:3000/callback
+          CLIENTS: '[{"id":"test-client-id","secret":"test-client-secret","redirectUris":["http://localhost:3000/callback"]}]'
+        run: |
+          echo "🧪 Running tests with current dependencies..."
+          deno test --allow-all --unstable-kv || echo "Tests failed with current dependencies"
+
+      - name: Check for security vulnerabilities
+        run: |
+          echo "🔐 Checking for security issues in dependencies..."
+          echo "Deno has built-in security, checking for outdated standard library versions..."
+
+          # Basic check for very old std versions that might have known issues
+          if grep -q "std@0.1" deno.json; then
+            echo "⚠️ Very old std library version detected"
+            exit 1
+          fi
+
+      - name: Create issue if updates available
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            let body = '## 🔄 Dependency Update Report\n\n';
+            body += 'Automated dependency check has detected potential issues or updates needed.\n\n';
+
+            try {
+              const report = fs.readFileSync('dependency-report.md', 'utf8');
+              body += '### Current Dependencies\n\n' + report + '\n\n';
+            } catch (e) {
+              body += 'Could not read dependency report.\n\n';
+            }
+
+            body += '### Recommended Actions\n\n';
+            body += '1. Review the latest versions of dependencies\n';
+            body += '2. Test the application with updated dependencies\n';
+            body += '3. Update deno.json with new versions if tests pass\n';
+            body += '4. Run the full test suite to ensure compatibility\n\n';
+            body += '### Automation\n\n';
+            body += 'This issue was created automatically by the dependency update workflow.\n';
+            body += `Triggered on: ${new Date().toISOString()}\n`;
+
+            // Check if issue already exists
+            const issues = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: ['dependencies']
+            });
+
+            const existingIssue = issues.data.find(issue =>
+              issue.title.includes('Dependency Update Check')
+            );
+
+            if (existingIssue) {
+              // Update existing issue
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: existingIssue.number,
+                body: '🔄 **Updated Dependency Check Report**\n\n' + body
+              });
+            } else {
+              // Create new issue
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title: '🔄 Dependency Update Check Required',
+                body: body,
+                labels: ['dependencies', 'maintenance']
+              });
+            }

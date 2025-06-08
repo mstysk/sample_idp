@@ -1,0 +1,201 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  test-before-release:
+    name: Pre-Release Testing
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Install dependencies
+        run: deno cache dev.ts
+
+      - name: Run full test suite
+        env:
+          JWT_SECRET: test-secret-key-for-release-testing-with-sufficient-length-32-bytes
+          CLIENT_ID: test-client-id
+          CLIENT_SECRET: test-client-secret
+          REDIRECT_URI: http://localhost:3000/callback
+          CLIENTS: '[{"id":"test-client-id","secret":"test-client-secret","redirectUris":["http://localhost:3000/callback"]}]'
+          ISSUER: https://test-issuer.com
+          JWT_PUBLIC: test-jwt-public-key
+          JWT_KEY_ID: test-key-id
+        run: |
+          echo "🧪 Running complete test suite for release..."
+          deno task test
+
+      - name: Run security tests
+        env:
+          JWT_SECRET: test-secret-key-for-security-release-with-sufficient-length-32-bytes
+          CLIENT_ID: test-client-id
+          CLIENT_SECRET: test-client-secret
+          REDIRECT_URI: http://localhost:3000/callback
+          CLIENTS: '[{"id":"test-client-id","secret":"test-client-secret","redirectUris":["http://localhost:3000/callback"]}]'
+        run: |
+          echo "🔐 Running security tests for release..."
+          deno test tests/security/ --allow-all --unstable-kv
+
+      - name: Build for production
+        env:
+          JWT_SECRET: release-build-secret-key
+          CLIENT_ID: release-client-id
+          CLIENT_SECRET: release-client-secret
+        run: |
+          echo "🏗️ Building for production..."
+          deno task build
+
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    needs: test-before-release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Deno
+        uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          echo "Generating changelog for ${{ steps.get_version.outputs.VERSION }}"
+
+          # Simple changelog generation from commit messages since last tag
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+
+          if [ -n "$PREV_TAG" ]; then
+            echo "Changes since $PREV_TAG:" > CHANGELOG.md
+            git log --pretty=format:"- %s (%h)" $PREV_TAG..HEAD >> CHANGELOG.md
+          else
+            echo "Initial release" > CHANGELOG.md
+          fi
+
+          # Add some default content
+          echo "" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "## Features" >> CHANGELOG.md
+          echo "- OpenID Connect Identity Provider" >> CHANGELOG.md
+          echo "- Passkey Authentication Support" >> CHANGELOG.md
+          echo "- JWT Token Management" >> CHANGELOG.md
+          echo "- Docker Support" >> CHANGELOG.md
+          echo "" >> CHANGELOG.md
+          echo "## Security" >> CHANGELOG.md
+          echo "- Secure password hashing with salt" >> CHANGELOG.md
+          echo "- JWT token validation" >> CHANGELOG.md
+          echo "- Input validation and sanitization" >> CHANGELOG.md
+
+      - name: Build production assets
+        env:
+          JWT_SECRET: production-build-secret
+          CLIENT_ID: production-client
+          CLIENT_SECRET: production-secret
+        run: |
+          deno task build
+
+          # Create deployment package
+          mkdir -p release-package
+
+          # Copy essential files
+          cp -r src release-package/
+          cp -r routes release-package/
+          cp -r static release-package/
+          cp -r islands release-package/
+          cp deno.json release-package/
+          cp fresh.config.ts release-package/
+          cp main.ts release-package/
+          cp dev.ts release-package/
+          cp Dockerfile release-package/
+          cp compose.yaml release-package/
+          cp README.md release-package/
+
+          # Create tar archive
+          tar -czf sample-idp-${{ steps.get_version.outputs.VERSION }}.tar.gz release-package/
+
+      - name: Create Docker image info
+        run: |
+          echo "## Docker Deployment" > DOCKER_INFO.md
+          echo "" >> DOCKER_INFO.md
+          echo "### Build Image" >> DOCKER_INFO.md
+          echo '```bash' >> DOCKER_INFO.md
+          echo "docker build -t sample-idp:${{ steps.get_version.outputs.VERSION }} ." >> DOCKER_INFO.md
+          echo '```' >> DOCKER_INFO.md
+          echo "" >> DOCKER_INFO.md
+          echo "### Run with Docker Compose" >> DOCKER_INFO.md
+          echo '```bash' >> DOCKER_INFO.md
+          echo "docker compose up -d" >> DOCKER_INFO.md
+          echo '```' >> DOCKER_INFO.md
+
+      - name: Create GitHub Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ steps.get_version.outputs.VERSION }}
+          release_name: Sample IdP ${{ steps.get_version.outputs.VERSION }}
+          body_path: CHANGELOG.md
+          draft: false
+          prerelease: false
+
+      - name: Upload release assets
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./sample-idp-${{ steps.get_version.outputs.VERSION }}.tar.gz
+          asset_name: sample-idp-${{ steps.get_version.outputs.VERSION }}.tar.gz
+          asset_content_type: application/gzip
+
+  docker-release:
+    name: Docker Release
+    runs-on: ubuntu-latest
+    needs: test-before-release
+    if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:latest
+            ghcr.io/${{ github.repository }}:${{ steps.get_version.outputs.VERSION }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
