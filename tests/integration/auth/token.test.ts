@@ -7,15 +7,15 @@ Deno.env.set("JWT_SECRET", "test-jwt-secret");
 Deno.env.set("JWT_PUBLIC", "test-jwt-public-key");
 Deno.env.set("JWT_KEY_ID", "test-key-id");
 
-Deno.test("Token endpoint - should handle valid client credentials", async () => {
+Deno.test("Token endpoint - should handle valid client credentials", () => {
   // This test would need to set up a test server
   // For now, we'll test the basic structure
-  
+
   const basicAuth = btoa("test-client-id:test-client-secret");
   const formData = new FormData();
   formData.append("code", "test-auth-code");
   formData.append("grant_type", "authorization_code");
-  
+
   const request = new Request("http://localhost:8000/auth/token", {
     method: "POST",
     headers: {
@@ -31,12 +31,12 @@ Deno.test("Token endpoint - should handle valid client credentials", async () =>
   assertEquals(request.headers.get("Authorization"), `Basic ${basicAuth}`);
 });
 
-Deno.test("Token endpoint - should reject invalid client credentials", async () => {
+Deno.test("Token endpoint - should reject invalid client credentials", () => {
   const basicAuth = btoa("invalid-client:invalid-secret");
   const formData = new FormData();
   formData.append("code", "test-auth-code");
   formData.append("grant_type", "authorization_code");
-  
+
   const request = new Request("http://localhost:8000/auth/token", {
     method: "POST",
     headers: {
@@ -50,12 +50,12 @@ Deno.test("Token endpoint - should reject invalid client credentials", async () 
   assertEquals(request.headers.get("Authorization"), `Basic ${basicAuth}`);
 });
 
-Deno.test("Token endpoint - should require authorization code", async () => {
+Deno.test("Token endpoint - should require authorization code", () => {
   const basicAuth = btoa("test-client-id:test-client-secret");
   const formData = new FormData();
   formData.append("grant_type", "authorization_code");
   // Missing code parameter
-  
+
   const request = new Request("http://localhost:8000/auth/token", {
     method: "POST",
     headers: {

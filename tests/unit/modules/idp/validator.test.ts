@@ -1,15 +1,21 @@
 import { assertEquals } from "@std/assert";
-import { create, isAuthoizationQueryParams } from "../../../../src/Modules/Idp/Validator.ts";
+import {
+  create,
+  isAuthoizationQueryParams,
+} from "../../../../src/Modules/Idp/Validator.ts";
 
 // Mock environment for client validation
 Deno.env.set("CLIENT_ID", "test-client-id");
 Deno.env.set("CLIENT_SECRET", "test-client-secret");
 Deno.env.set("REDIRECT_URI", "http://localhost:3000/callback");
-Deno.env.set("CLIENTS", JSON.stringify([{
-  id: "test-client-id",
-  secret: "test-client-secret",
-  redirectUris: ["http://localhost:3000/callback"]
-}]));
+Deno.env.set(
+  "CLIENTS",
+  JSON.stringify([{
+    id: "test-client-id",
+    secret: "test-client-secret",
+    redirectUris: ["http://localhost:3000/callback"],
+  }]),
+);
 
 Deno.test("Validator - should validate correct authorization parameters", async () => {
   const validator = create();
@@ -23,7 +29,7 @@ Deno.test("Validator - should validate correct authorization parameters", async 
   });
 
   const result = await validator.validate(params);
-  
+
   if (isAuthoizationQueryParams(result)) {
     assertEquals(result.scope.includes("openid"), true);
     assertEquals(result.scope.includes("profile"), true);
@@ -48,9 +54,9 @@ Deno.test("Validator - should reject missing scope", async () => {
   });
 
   const result = await validator.validate(params);
-  
+
   assertEquals(isAuthoizationQueryParams(result), false);
-  assertEquals((result as any).message, "scope is invalid");
+  assertEquals((result as { message: string }).message, "scope is invalid");
 });
 
 Deno.test("Validator - should reject scope without openid", async () => {
@@ -64,9 +70,9 @@ Deno.test("Validator - should reject scope without openid", async () => {
   });
 
   const result = await validator.validate(params);
-  
+
   assertEquals(isAuthoizationQueryParams(result), false);
-  assertEquals((result as any).message, "scope is only openid");
+  assertEquals((result as { message: string }).message, "scope is only openid");
 });
 
 Deno.test("Validator - should reject invalid response_type", async () => {
@@ -80,9 +86,12 @@ Deno.test("Validator - should reject invalid response_type", async () => {
   });
 
   const result = await validator.validate(params);
-  
+
   assertEquals(isAuthoizationQueryParams(result), false);
-  assertEquals((result as any).message, "response_type is only code");
+  assertEquals(
+    (result as { message: string }).message,
+    "response_type is only code",
+  );
 });
 
 Deno.test("Validator - should reject missing client_id", async () => {
@@ -95,9 +104,12 @@ Deno.test("Validator - should reject missing client_id", async () => {
   });
 
   const result = await validator.validate(params);
-  
+
   assertEquals(isAuthoizationQueryParams(result), false);
-  assertEquals((result as any).message, "client_id is not found");
+  assertEquals(
+    (result as { message: string }).message,
+    "client_id is not found",
+  );
 });
 
 Deno.test("Validator - should reject missing state", async () => {
@@ -110,7 +122,7 @@ Deno.test("Validator - should reject missing state", async () => {
   });
 
   const result = await validator.validate(params);
-  
+
   assertEquals(isAuthoizationQueryParams(result), false);
-  assertEquals((result as any).message, "state is not found");
+  assertEquals((result as { message: string }).message, "state is not found");
 });

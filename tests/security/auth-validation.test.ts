@@ -4,7 +4,10 @@ import { createJWT } from "../../src/Infra/JWT.ts";
 import { UserType } from "../../src/Repository/User.ts";
 
 // Set up test environment - need at least 32 bytes for HMAC-SHA256
-Deno.env.set("JWT_SECRET", "test-secret-key-for-security-tests-with-sufficient-length-32-bytes");
+Deno.env.set(
+  "JWT_SECRET",
+  "test-secret-key-for-security-tests-with-sufficient-length-32-bytes",
+);
 
 const testUser: UserType = {
   id: "test-user-id",
@@ -21,7 +24,7 @@ Deno.test("Security - authCheck should redirect without session cookie", async (
   });
 
   const result = await authCheck(request);
-  
+
   // Should return a Response (redirect), not UserType
   assertEquals(result instanceof Response, true);
   if (result instanceof Response) {
@@ -39,7 +42,7 @@ Deno.test("Security - authCheck should redirect with invalid session", async () 
   });
 
   const result = await authCheck(request);
-  
+
   assertEquals(result instanceof Response, true);
   if (result instanceof Response) {
     assertEquals(result.status, 302);
@@ -57,7 +60,7 @@ Deno.test("Security - authCheck should return user with valid session", async ()
   });
 
   const result = await authCheck(request);
-  
+
   // Should return UserType, not Response
   assertEquals(result instanceof Response, false);
   if (!(result instanceof Response)) {
@@ -75,7 +78,7 @@ Deno.test("Security - authCheck should handle malformed cookie", async () => {
   });
 
   const result = await authCheck(request);
-  
+
   assertEquals(result instanceof Response, true);
   if (result instanceof Response) {
     assertEquals(result.status, 302);
@@ -92,7 +95,7 @@ Deno.test("Security - authCheck should handle multiple cookies", async () => {
   });
 
   const result = await authCheck(request);
-  
+
   assertEquals(result instanceof Response, false);
   if (!(result instanceof Response)) {
     assertEquals(result.id, testUser.id);

@@ -1,6 +1,14 @@
 import { assertEquals } from "@std/assert";
-import { generateIdTokenPayload, pickupClaims } from "../../../../src/Modules/Idp/IdToken.ts";
-import { EmailScope, ProfileScope, PictureScope, Scope } from "../../../../src/Modules/Idp/Validator.ts";
+import {
+  generateIdTokenPayload,
+  pickupClaims,
+} from "../../../../src/Modules/Idp/IdToken.ts";
+import {
+  EmailScope,
+  PictureScope,
+  ProfileScope,
+  Scope,
+} from "../../../../src/Modules/Idp/Validator.ts";
 import { UserType } from "../../../../src/Repository/User.ts";
 
 const testUser: UserType = {
@@ -31,7 +39,7 @@ Deno.test("IdToken - generateIdTokenPayload should create valid payload", () => 
   assertEquals(payload.nonce, testParams.nonce);
   assertEquals(typeof payload.exp, "number");
   assertEquals(typeof payload.iat, "number");
-  
+
   // Should include claims from scopes
   assertEquals(payload.name, testUser.displayName);
   assertEquals(payload.email, testUser.email);
@@ -77,7 +85,11 @@ Deno.test("IdToken - pickupClaims should include picture scope claims", () => {
 });
 
 Deno.test("IdToken - pickupClaims should include multiple scope claims", () => {
-  const claims = pickupClaims(testUser, [ProfileScope, EmailScope, PictureScope]);
+  const claims = pickupClaims(testUser, [
+    ProfileScope,
+    EmailScope,
+    PictureScope,
+  ]);
 
   assertEquals(claims.name, testUser.displayName);
   assertEquals(claims.email, testUser.email);
