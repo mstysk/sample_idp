@@ -17,7 +17,7 @@ import {
 function generateSalt(): string {
   const randomBytes = new Uint8Array(16);
   crypto.getRandomValues(randomBytes);
-  return base64Encode(randomBytes);
+  return base64Encode(randomBytes.buffer);
 }
 
 export async function generatePassowrdHash(
@@ -31,7 +31,7 @@ export async function generatePassowrdHash(
   const hashBuffer = await crypto.subtle.digest("SHA-256", passwordData);
 
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashBase64 = base64Encode(new Uint8Array(hashArray));
+  const hashBase64 = base64Encode(hashBuffer);
 
   const token = `${salt}.${hashBase64}`;
 
@@ -50,7 +50,7 @@ async function verifyPassword(
   const hashBuffer = await crypto.subtle.digest("SHA-256", passwordData);
 
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashBase64 = base64Encode(new Uint8Array(hashArray));
+  const hashBase64 = base64Encode(hashBuffer);
 
   return hashBase64 === hash;
 }

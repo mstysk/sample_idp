@@ -1,8 +1,15 @@
 import { JWTPayload, jwtVerify, SignJWT } from "npm:jose";
 
-const secret = new TextEncoder().encode(Deno.env.get("JWT_SECRET") || "");
+function getSecret(): Uint8Array {
+  const secretString = Deno.env.get("JWT_SECRET");
+  if (!secretString) {
+    throw new Error("JWT_SECRET environment variable is required");
+  }
+  return new TextEncoder().encode(secretString);
+}
 
 export async function createJWT(payload: JWTPayload): Promise<string> {
+  const secret = getSecret();
   const jwt = await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
@@ -13,6 +20,7 @@ export async function createJWT(payload: JWTPayload): Promise<string> {
 
 export async function verifyJWT(token: string): Promise<JWTPayload | null> {
   try {
+    const secret = getSecret();
     const { payload } = await jwtVerify(token, secret);
     return payload;
   } catch (error) {
