@@ -7,6 +7,10 @@ import {
   create,
 } from "../../src/Modules/Idp/Repositories/AccessToken.ts";
 import { getKeyId } from "../../src/Infra/JWK.ts";
+import {
+  isValidCodeVerifier,
+  verifyCodeChallenge,
+} from "../../src/Modules/Idp/PKCE.ts";
 
 type ClientId = string;
 type ClientSecret = string;
@@ -26,6 +30,31 @@ export const handler: Handlers = {
     if (!authCodeEntity) {
       return new Response("invalid code", { status: 400 });
     }
+
+    // PKCE verification
+    if (authCodeEntity.codeChallenge) {
+      const codeVerifier = formData.get("code_verifier")?.toString();
+      if (!codeVerifier) {
+        return new Response(
+          JSON.stringify({ error: "invalid_grant", error_description: "code_verifier required" }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      if (!isValidCodeVerifier(codeVerifier)) {
+        return new Response(
+          JSON.stringify({ error: "invalid_grant", error_description: "invalid code_verifier format" }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
+        );
+      }
+      const isValid = await verifyCodeChallenge(codeVerifier, authCodeEntity.codeChallenge);
+      if (!isValid) {
+        return new Response(
+          JSON.stringify({ error: "invalid_grant", error_description: "code_verifier mismatch" }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
+        );
+      }
+    }
+
     const idToken = await encodeIdToken(
       authCodeEntity.payload,
       getKeyId(),

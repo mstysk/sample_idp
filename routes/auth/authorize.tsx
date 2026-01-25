@@ -32,6 +32,7 @@ export const handler: Handlers = {
     const authCode = await authCodeRepository.store(
       idTokenPayload,
       params.scope,
+      params.codeChallenge,
     );
     const redirectUrl = new URL(params.redirectUri);
     redirectUrl.searchParams.set("code", authCode);

@@ -8,7 +8,11 @@ import { Scope } from "../Validator.ts";
 type AuthCode = string;
 
 export interface AuthCodeRepositoryInterface {
-  store(payload: JWTPayload, scopes: Scope[]): Promise<AuthCode>;
+  store(
+    payload: JWTPayload,
+    scopes: Scope[],
+    codeChallenge?: string,
+  ): Promise<AuthCode>;
   findByCode(code: AuthCode): Promise<AuthCodeEntity | null>;
   generateAuthCode(): AuthCode;
 }
@@ -17,6 +21,7 @@ interface AuthCodeEntity extends StorageEntity {
   id: ResourceId;
   payload: IdTokenPayload;
   scopes: Scope[];
+  codeChallenge?: string;
 }
 
 class AuthCodeRepository implements AuthCodeRepositoryInterface {
@@ -26,12 +31,17 @@ class AuthCodeRepository implements AuthCodeRepositoryInterface {
   ) {
     this.authCodeStorage = authCodeStorage;
   }
-  async store(payload: IdTokenPayload, scopes: Scope[]): Promise<AuthCode> {
+  async store(
+    payload: IdTokenPayload,
+    scopes: Scope[],
+    codeChallenge?: string,
+  ): Promise<AuthCode> {
     const authCode = this.generateAuthCode();
     await this.authCodeStorage.save({
       id: authCode,
       payload,
       scopes,
+      codeChallenge,
     });
     return authCode;
   }

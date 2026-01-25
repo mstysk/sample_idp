@@ -2,6 +2,10 @@ import {
   ClientRepositoryInterface,
   createFromEnv,
 } from "./Repositories/Client.ts";
+import {
+  CODE_CHALLENGE_METHOD,
+  isValidCodeChallenge,
+} from "./PKCE.ts";
 
 interface ValidaterInterface {
   validate(
@@ -49,6 +53,7 @@ export type AuthorizationQueryParams = {
   redirectUri: RedirectUri;
   state: State;
   nonce?: Nonce;
+  codeChallenge?: string;
 };
 
 export const isAuthoizationQueryParams = (
@@ -116,6 +121,14 @@ class StateNotFound extends QueryParamValidationErrorAbs {
   message = "state is not found";
 }
 
+class UnsupportedCodeChallengeMethod extends QueryParamValidationErrorAbs {
+  message = "unsupported code_challenge_method";
+}
+
+class InvalidCodeChallengeFormat extends QueryParamValidationErrorAbs {
+  message = "invalid code_challenge format";
+}
+
 class Validater implements ValidaterInterface {
   private clientRepostory: ClientRepositoryInterface;
 
@@ -179,6 +192,22 @@ class Validater implements ValidaterInterface {
 
     const nonce = params.get("nonce")?.toString();
 
+    // PKCE validation (optional)
+    const codeChallenge = params.get("code_challenge")?.toString();
+    const codeChallengeMethod = params.get("code_challenge_method")?.toString();
+
+    if (codeChallenge) {
+      // If code_challenge is provided, code_challenge_method must be S256
+      if (codeChallengeMethod && codeChallengeMethod !== CODE_CHALLENGE_METHOD) {
+        return new UnsupportedCodeChallengeMethod(
+          `only ${CODE_CHALLENGE_METHOD} is supported`,
+        );
+      }
+      if (!isValidCodeChallenge(codeChallenge)) {
+        return new InvalidCodeChallengeFormat();
+      }
+    }
+
     return {
       scope: scopes,
       responseType: responseType,
@@ -186,6 +215,7 @@ class Validater implements ValidaterInterface {
       redirectUri: redirectUri,
       state: state,
       nonce,
+      codeChallenge,
     };
   }
 }
